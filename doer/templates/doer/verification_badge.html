@@ -1,0 +1,173 @@
+{% extends 'doer/base_doer.html' %}
+{% block content %}
+
+<div class="container py-5">
+    <div class="card border-0 shadow-sm p-4 mx-auto" style="border-radius: 20px; max-width: 800px;">
+        
+        {% if user.approval_status == 'Accepted' %}
+            <div class="text-center py-5">
+                <div class="mb-4">
+                    <i class="bi bi-patch-check-fill text-success" style="font-size: 5rem;"></i>
+                </div>
+                <h2 class="fw-bold text-dark">Identity Verified</h2>
+                <p class="text-muted mx-auto" style="max-width: 500px;">
+                    Your identity has been verified. You now have the verified badge on your profile.
+                </p>
+                <div class="mt-4">
+                    <span class="badge bg-success text-white px-4 py-2 rounded-pill">
+                        <i class="bi bi-shield-check me-2"></i>Verified Doer
+                    </span>
+                </div>
+                <div class="mt-5">
+                    <a href="{% url 'doer_profile_view' %}" class="btn btn-dark px-5 py-2 rounded-pill fw-bold">View Profile</a>
+                </div>
+            </div>
+
+        {% elif user.approval_status == 'Under Review' %}
+            <h2 class="fw-bold mb-4 text-center">Identity Verification</h2>
+            <div class="text-center py-4">
+                <i class="bi bi-hourglass-split text-primary" style="font-size: 3rem;"></i>
+                <h3 class="fw-bold mt-2">Under Review</h3>
+                <p class="text-muted">Your documents are currently being reviewed by our team.</p>
+                <hr>
+            </div>
+
+            <div class="row g-4 text-center">
+                <div class="col-md-6">
+                    <label class="fw-bold small text-uppercase text-muted d-block mb-2">Submitted Aadhaar</label>
+                    {% if user.adhar_photo %}
+                        <img src="{{ user.adhar_photo.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 180px; width: 100%; object-fit: cover;">
+                    {% endif %}
+                </div>
+                <div class="col-md-6">
+                    <label class="fw-bold small text-uppercase text-muted d-block mb-2">Submitted Live Photo</label>
+                    {% if user.verification_live_photo %}
+                        <img src="{{ user.verification_live_photo.url }}" class="img-fluid rounded border shadow-sm" style="max-height: 180px; width: 100%; object-fit: cover;">
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="text-center mt-5">
+                <p class="small text-muted">You cannot modify your submission while it is under review.</p>
+                <a href="{% url 'doer_profile_view' %}" class="btn btn-outline-secondary btn-sm px-4 rounded-pill">Back</a>
+            </div>
+
+        {% else %}
+            <h2 class="fw-bold mb-4 text-center">Identity Verification</h2>
+
+            {% if user.approval_status == 'Rejected' %}
+                <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-4 d-flex align-items-center">
+                    <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
+                    <div>
+                        <div class="fw-bold">Previous Application Rejected</div>
+                        <div class="small">Please review your documents and re-upload clear images.</div>
+                        <div class="small mt-2">
+                            Attempt {{ user.verification_attempts }} of 3
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- 🚫 BLOCK AFTER 3 FAILURES -->
+            {% if user.verification_attempts >= 3 and user.approval_status == 'Rejected' %}
+                <div class="alert alert-danger text-center fw-bold py-4">
+                    3 attempts failed. You will not be verified.
+                </div>
+            {% else %}
+
+            <form method="POST" enctype="multipart/form-data" id="vform">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label class="fw-bold small mb-1">UPLOAD AADHAAR CARD (IMAGE)</label>
+                    <input type="file" name="aadhaar_photo_file" class="form-control" accept="image/*" required>
+                </div>
+
+                <div class="mb-3">
+                    <label class="fw-bold small mb-1">NON-CRIMINAL CERTIFICATE</label>
+                    <input type="file" name="non_criminal_certificate" class="form-control" required>
+                </div>
+
+                <div class="mb-4">
+                    <label class="fw-bold small d-block mb-2">LIVE PHOTO CAPTURE</label>
+                    <div class="position-relative bg-dark rounded overflow-hidden shadow-inner" style="min-height: 300px;">
+                        <video id="video" width="100%" height="auto" autoplay playsinline style="object-fit: cover;"></video>
+                        <img id="photo_preview" style="display:none; width:100%; height:auto;">
+                        <div id="flash" style="position:absolute; top:0; left:0; width:100%; height:100%; background:white; display:none; opacity:0.8; z-index:10;"></div>
+                    </div>
+
+                    <div class="mt-3 text-center">
+                        <button type="button" id="btn_capture" class="btn btn-dark px-4 py-2" onclick="capturePhoto()">
+                            <i class="bi bi-camera-fill me-2"></i>Take Photo
+                        </button>
+                        
+                        <div id="after_capture" style="display: none;">
+                            <button type="button" class="btn btn-outline-danger btn-sm px-4" onclick="retakePhoto()">
+                                <i class="bi bi-arrow-counterclockwise me-1"></i>Retake
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" name="live_photo_data" id="live_photo_data" required>
+                <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
+                
+                <button type="submit" class="btn btn-success w-100 fw-bold py-3 shadow-sm mt-2" style="border-radius: 12px;">
+                    Submit for Verification
+                </button>
+            </form>
+
+            {% endif %}
+
+            <script>
+                const video = document.getElementById('video');
+                const preview = document.getElementById('photo_preview');
+                const btnCapture = document.getElementById('btn_capture');
+                const afterCapture = document.getElementById('after_capture');
+                const flash = document.getElementById('flash');
+                const liveInput = document.getElementById('live_photo_data');
+
+                navigator.mediaDevices.getUserMedia({ 
+                    video: { facingMode: "user", width: { ideal: 640 }, height: { ideal: 480 } } 
+                })
+                .then(stream => { video.srcObject = stream; })
+                .catch(err => { 
+                    alert("Camera error: Please ensure you have granted camera permissions.");
+                });
+
+                function capturePhoto() {
+                    const canvas = document.getElementById('canvas');
+                    const context = canvas.getContext('2d');
+                    flash.style.display = 'block';
+                    setTimeout(() => { flash.style.display = 'none'; }, 100);
+
+                    context.drawImage(video, 0, 0, 640, 480);
+                    const data = canvas.toDataURL('image/png');
+                    liveInput.value = data;
+                    preview.src = data;
+
+                    video.style.display = 'none';
+                    preview.style.display = 'block';
+                    btnCapture.style.display = 'none';
+                    afterCapture.style.display = 'block';
+                }
+
+                function retakePhoto() {
+                    liveInput.value = "";
+                    video.style.display = 'block';
+                    preview.style.display = 'none';
+                    btnCapture.style.display = 'inline-block';
+                    afterCapture.style.display = 'none';
+                }
+
+                document.getElementById('vform').onsubmit = function(e) {
+                    if (!liveInput.value) {
+                        alert("Please take a live photo first.");
+                        e.preventDefault();
+                    }
+                };
+            </script>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

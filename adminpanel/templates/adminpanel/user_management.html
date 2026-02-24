@@ -1,0 +1,180 @@
+{% extends 'adminpanel/base_admin.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="container-fluid py-4" style="background-color: #f8f9fa; min-height: 100vh;">
+    <div class="row align-items-center mb-4">
+        <div class="col-md-6">
+            <h2 class="fw-bold text-dark mb-1">User Management</h2>
+            <p class="text-muted small">Review and manage identity verification requests</p>
+        </div>
+        <div class="col-md-6 text-md-end">
+            <div class="dropdown">
+                <button class="btn btn-white border shadow-sm dropdown-toggle px-4 py-2 fw-semibold" type="button" data-bs-toggle="dropdown">
+                    <i class="bi bi-funnel me-2 text-primary"></i>Status: <strong>{{ current_filter }}</strong>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
+                    <li><a class="dropdown-item rounded {% if current_filter == 'Under Review' %}active{% endif %}" href="?status=Under Review">Under Review</a></li>
+                    <li><a class="dropdown-item rounded {% if current_filter == 'Accepted' %}active{% endif %}" href="?status=Accepted">Accepted</a></li>
+                    <li><a class="dropdown-item rounded {% if current_filter == 'Rejected' %}active{% endif %}" href="?status=Rejected">Rejected</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+        <div class="table-responsive">
+            <table class="table align-middle table-hover mb-0 bg-white">
+                <thead class="bg-light border-bottom">
+                    <tr>
+                        <th class="ps-4 py-3 text-secondary small fw-bold text-uppercase">User Profile</th>
+                        <th class="py-3 text-secondary small fw-bold text-uppercase">Role</th>
+                        <th class="py-3 text-secondary small fw-bold text-uppercase">Verification Docs</th>
+                        <th class="py-3 text-secondary small fw-bold text-center text-uppercase">Status</th>
+                        <th class="py-3 text-secondary small fw-bold text-end pe-4 text-uppercase">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for u in users %}
+                    <tr>
+                        <td class="ps-4 py-3">
+                            <div class="d-flex align-items-center">
+                                {% if u.photo %}
+                                    <img src="{{ u.photo.url }}" class="rounded-circle border border-2 border-white shadow-sm me-3" width="48" height="48" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle me-3 bg-primary bg-opacity-10 d-flex align-items-center justify-content-center text-primary fw-bold" style="width: 48px; height: 48px;">
+                                        {{ u.name|slice:":1"|upper }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <div class="fw-bold text-dark mb-0">{{ u.name }}</div>
+                                    <div class="text-muted small" style="font-size: 0.8rem;">{{ u.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td>
+                            <span class="badge bg-light text-dark border fw-medium px-3 py-2 rounded-pill">
+                                {{ u.role|capfirst }}
+                            </span>
+                        </td>
+
+                        <td>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="btn-group btn-group-sm shadow-none">
+                                    {% if u.adhar_photo %}
+                                    <a href="{{ u.adhar_photo.url }}" target="_blank" class="btn btn-outline-primary border-end-0" title="View Aadhaar Photo">
+                                        <i class="bi bi-card-image me-1"></i> Aadhaar ID
+                                    </a>
+                                    {% else %}
+                                    <button class="btn btn-outline-secondary border-end-0 disabled">
+                                        <i class="bi bi-card-image me-1"></i> No ID Photo
+                                    </button>
+                                    {% endif %}
+                                    
+                                    {% if u.verification_live_photo %}
+                                    <a href="{{ u.verification_live_photo.url }}" target="_blank" class="btn btn-outline-dark border-end-0" title="View Live Photo">
+                                        <i class="bi bi-camera me-1"></i> Live
+                                    </a>
+                                    {% endif %}
+                                    
+                                    {% if u.certificate_file %}
+                                    <a href="{{ u.certificate_file.url }}" target="_blank" class="btn btn-outline-dark" title="View Certificate">
+                                        <i class="bi bi-file-earmark-check me-1"></i> Cert
+                                    </a>
+                                    {% endif %}
+                                </div>
+                                
+                                {% if u.adhar_card %}
+                                <div class="mt-1 d-flex align-items-center">
+                                    <span class="text-muted fw-bold me-2" style="font-size: 0.65rem; letter-spacing: 0.5px;">AADHAAR NO:</span>
+                                    <code class="text-primary fw-bold" style="background: #eef2ff; padding: 2px 6px; border-radius: 4px;">{{ u.adhar_card }}</code>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </td>
+
+                        <td class="text-center">
+                            {% if u.approval_status == 'Accepted' %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">Approved</span>
+                            {% elif u.approval_status == 'Rejected' %}
+                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill">Rejected</span>
+                            {% else %}
+                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill">Under Review</span>
+                            {% endif %}
+                        </td>
+
+                        <td class="text-end pe-4">
+                            <div class="d-flex justify-content-end gap-2">
+                                <a href="{% url 'update_status' u.id 'accept' %}?current_filter={{ current_filter }}" class="btn btn-sm btn-success rounded-3 px-3 shadow-sm border-0" title="Approve">
+                                    <i class="bi bi-check-lg"></i>
+                                </a>
+                                <a href="{% url 'update_status' u.id 'reject' %}?current_filter={{ current_filter }}" class="btn btn-sm btn-outline-warning rounded-3 px-3" title="Reject">
+                                    <i class="bi bi-x-lg"></i>
+                                </a>
+                                <button type="button" class="btn btn-sm btn-light text-danger rounded-circle p-2 ms-1 border-0" onclick="confirmDelete('{{ u.id }}', '{{ u.name }}', '{{ current_filter }}')" title="Delete">
+                                    <i class="bi bi-trash3"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center py-5">
+                            <i class="bi bi-person-x text-light" style="font-size: 4rem;"></i>
+                            <h5 class="mt-3 text-muted">No users found</h5>
+                            <p class="text-secondary small">Try changing the status filter.</p>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .btn-white { background: #fff; color: #333; transition: all 0.2s; }
+    .btn-white:hover { background: #f8f9fa; transform: translateY(-1px); }
+    .table-hover tbody tr:hover { background-color: #fbfcfe !important; transition: 0.3s; }
+    .btn-group .btn { font-size: 0.75rem; padding: 0.5rem 0.8rem; }
+    .badge { letter-spacing: 0.3px; }
+    .dropdown-item.active { background-color: #0d6efd; color: white; }
+    code { font-size: 0.85rem; }
+    
+    /* Customizing SweetAlert fonts to match Bootstrap */
+    .swal2-popup {
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+        border-radius: 1.2rem !important;
+    }
+</style>
+
+<script>
+function confirmDelete(userId, userName, currentFilter) {
+    Swal.fire({
+        title: 'Delete User?',
+        text: "Are you sure you want to permanently delete " + userName + "? This cannot be undone.",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#6e7881',
+        confirmButtonText: 'Yes, Delete',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        background: '#ffffff',
+        customClass: {
+            confirmButton: 'btn btn-danger px-4 rounded-3',
+            cancelButton: 'btn btn-light px-4 rounded-3 me-2'
+        },
+        buttonsStyling: false
+    }).then((result) => {
+        if (result.isConfirmed) {
+            let baseUrl = "{% url 'update_status' 0 'delete' %}";
+            let finalUrl = baseUrl.replace('0', userId) + "?current_filter=" + encodeURIComponent(currentFilter);
+            window.location.href = finalUrl;
+        }
+    })
+}
+</script>
+{% endblock %}

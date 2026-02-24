@@ -1,0 +1,175 @@
+from django.contrib.auth.decorators import user_passes_test
+from accounts.models import User
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
+from django.urls import reverse
+from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import District, Place, Pincode
+from .models import Category, Skill
+
+
+
+# Security: Only allow Superusers to see this page
+def is_admin(user):
+    return user.is_superuser
+
+@user_passes_test(is_admin)
+def admin_dashboard(request):
+    # Gather stats for the dashboard
+    total_users = User.objects.filter(is_superuser=False).count()
+    total_givers = User.objects.filter(role='giver').count()
+    total_doers = User.objects.filter(role='doer').count()
+    active_doers = User.objects.filter(role='doer', status='Active').count()
+
+    context = {
+        'total_users': total_users,
+        'total_givers': total_givers,
+        'total_doers': total_doers,
+        'active_doers': active_doers,
+    }
+    return render(request, 'adminpanel/dashboard.html', context)
+
+
+
+@user_passes_test(is_admin)
+def admin_user_management(request):
+    """
+    THIS WAS MISSING: This function handles the user list page and filtering.
+    """
+    # Get the filter status from URL, default to 'Under Review'
+    status_filter = request.GET.get('status', 'Under Review')
+    
+    # Fetch users based on filter
+    users = User.objects.filter(approval_status=status_filter).exclude(is_superuser=True).order_by('-id')
+    
+    return render(request, 'adminpanel/user_management.html', {
+        'users': users,
+        'current_filter': status_filter
+    })
+
+@user_passes_test(is_admin)
+def update_user_status(request, user_id, action):
+    user_to_update = get_object_or_404(User, id=user_id)
+    
+    # 1. Capture the filter the admin was currently viewing
+    current_filter = request.GET.get('current_filter', 'Under Review')
+    
+    if action == 'accept':
+        user_to_update.approval_status = 'Accepted'
+        messages.success(request, f"User {user_to_update.name} has been approved.")
+    elif action == 'reject':
+        user_to_update.approval_status = 'Rejected'
+        messages.warning(request, f"User {user_to_update.name} has been rejected.")
+    elif action == 'delete':
+        user_to_update.delete()
+        messages.error(request, "User account has been permanently deleted.")
+        return redirect(f"{reverse('admin_user_management')}?status={current_filter}")
+
+    user_to_update.save()
+    
+    # 2. Redirect back with the 'status' parameter to maintain the view
+    return redirect(f"{reverse('admin_user_management')}?status={current_filter}")
+
+
+@user_passes_test(is_admin)
+def location_management(request):
+    if request.method == "POST":
+        action = request.POST.get('action')
+
+        # 1. Logic for Adding District
+        if action == "add_district":
+            district_name = request.POST.get('district_name')
+            if district_name:
+                District.objects.create(district_name=district_name)
+        
+        # 2. Logic for Adding Place
+        elif action == "add_place":
+            district_id = request.POST.get('district_id')
+            place_name = request.POST.get('place_name')
+            if district_id and place_name:
+                dist = get_object_or_404(District, id=district_id)
+                Place.objects.create(district=dist, place_name=place_name)
+
+        # 3. Logic for Adding Pincode
+        elif action == "add_pincode":
+            place_id = request.POST.get('place_id')
+            pincode_number = request.POST.get('pincode_number')
+            if place_id and pincode_number:
+                place_obj = get_object_or_404(Place, id=place_id)
+                Pincode.objects.create(place=place_obj, pincode_number=pincode_number)
+
+        return redirect('location_management')
+
+    # Data for the view (Tabs and Dropdowns)
+    context = {
+        'districts': District.objects.all(),
+        'places': Place.objects.all(),
+        'pincodes': Pincode.objects.select_related('place__district').all(),
+    }
+    return render(request, 'adminpanel/location_management.html', context)
+
+# --- DELETE ACTIONS ---
+
+@user_passes_test(is_admin)
+def delete_location(request, pk):
+    """Deletes a specific Pincode"""
+    pincode = get_object_or_404(Pincode, id=pk)
+    pincode.delete()
+    return redirect('location_management')
+
+@user_passes_test(is_admin)
+def delete_place(request, pk):
+    """Deletes a Place and all its associated Pincodes"""
+    place = get_object_or_404(Place, id=pk)
+    place.delete()
+    return redirect('location_management')
+
+@user_passes_test(is_admin)
+def delete_district(request, pk):
+    """Deletes a District and EVERYTHING inside it (Places & Pincodes)"""
+    district = get_object_or_404(District, id=pk)
+    district.delete()
+    return redirect('location_management')
+
+
+
+
+@user_passes_test(is_admin)
+def skill_management(request):
+    if request.method == "POST":
+        action = request.POST.get('action')
+
+        # Add Category Logic
+        if action == "add_category":
+            cat_name = request.POST.get('category_name')
+            if cat_name:
+                Category.objects.create(category_name=cat_name)
+
+        # Add Skill Logic
+        elif action == "add_skill":
+            cat_id = request.POST.get('category_id')
+            skill_name = request.POST.get('skill_name')
+            if cat_id and skill_name:
+                category_obj = get_object_or_404(Category, id=cat_id)
+                Skill.objects.create(category=category_obj, skill_name=skill_name)
+
+        return redirect('skill_management')
+
+    context = {
+        'categories': Category.objects.all().order_by('category_name'),
+        'skills': Skill.objects.select_related('category').all().order_by('-id'),
+    }
+    return render(request, 'adminpanel/skill_management.html', context)
+
+@user_passes_test(is_admin)
+def delete_category(request, pk):
+    get_object_or_404(Category, id=pk).delete()
+    return redirect('skill_management')
+
+@user_passes_test(is_admin)
+def delete_skill(request, pk):
+    get_object_or_404(Skill, id=pk).delete()
+    return redirect('skill_management')
+
+

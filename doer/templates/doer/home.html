@@ -1,0 +1,89 @@
+{% extends 'doer/base_doer.html' %}
+
+{% block page_title %}Dashboard Overview{% endblock %}
+
+{% block content %}
+<div class="row g-4">
+    <div class="col-md-12">
+        <div class="card border-0 shadow-sm p-4 mb-2 bg-white" style="border-radius: 16px;">
+            <div class="d-flex align-items-center justify-content-between">
+                <div>
+                    <h1 class="display-6 fw-bold" style="color: var(--forest-base);">
+                        Welcome back, {{ user.username|title }}!
+                    </h1>
+                    <p class="text-muted mb-0">You are currently operating in the <span class="text-emerald fw-semibold">Task Doer Workspace</span>.</p>
+                </div>
+                <div class="text-end">
+                    <p class="small text-muted mb-1 text-uppercase fw-bold">Availability Status</p>
+                    {% if user.status == 'Active' %}
+                        <span class="badge bg-emerald-soft text-emerald border border-success-subtle px-3 py-2 rounded-pill">
+                            <i class="bi bi-circle-fill me-2" style="font-size: 0.5rem; vertical-align: middle;"></i> Available to work
+                        </span>
+                    {% else %}
+                        <span class="badge bg-danger-subtle text-danger border border-danger-subtle px-3 py-2 rounded-pill">
+                            <i class="bi bi-clock-history me-1"></i> Busy / Allocated
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0" style="color: var(--forest-base);">
+                    <i class="bi bi-briefcase text-emerald me-2"></i> Current Task
+                </h5>
+                <a href="#" class="text-emerald small text-decoration-none fw-bold">View History</a>
+            </div>
+            <div class="py-4 text-center border rounded-3 bg-light bg-opacity-50" style="border-style: dashed !important;">
+                <i class="bi bi-inbox text-muted display-6 mb-2 d-block"></i>
+                <p class="text-muted mb-0">No active tasks assigned yet.</p>
+                <a href="#" class="btn btn-sm mt-3 px-4" style="background: var(--forest-base); color: white; border-radius: 8px;">
+                    Find Tasks
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card border-0 shadow-sm p-4 h-100" style="border-radius: 16px;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h5 class="fw-bold mb-0" style="color: var(--forest-base);">
+                    <i class="bi bi-graph-up-arrow text-emerald me-2"></i> Performance
+                </h5>
+            </div>
+            <div class="row mt-3">
+                <div class="col-6 border-end">
+                    <p class="text-muted small text-uppercase fw-bold mb-1">Total Jobs</p>
+                    <h3 class="fw-bold">0</h3>
+                </div>
+                <div class="col-6 ps-4">
+                    <p class="text-muted small text-uppercase fw-bold mb-1">Rating</p>
+                    <div class="d-flex align-items-center">
+                        <h3 class="fw-bold mb-0">N/A</h3>
+                        <i class="bi bi-star-fill text-warning ms-2"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="mt-4 p-3 rounded-3" style="background-color: var(--soft-emerald);">
+                <p class="small text-dark mb-0">
+                    <i class="bi bi-info-circle-fill text-emerald me-2"></i>
+                    Complete your first task to unlock performance metrics!
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Inline styles specifically for this welcome block */
+    .bg-emerald-soft {
+        background-color: #ecfdf5;
+    }
+    .text-emerald {
+        color: #10b981 !important;
+    }
+</style>
+{% endblock %}

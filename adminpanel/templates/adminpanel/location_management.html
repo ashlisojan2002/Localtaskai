@@ -1,0 +1,286 @@
+{% extends 'adminpanel/base_admin.html' %}
+{% block content %}
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Location Management</h2>
+            <p class="text-muted small">Manage hierarchical data for Districts, Places, and Pincodes</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addDistrictModal">
+                <i class="bi bi-plus-lg me-1"></i> District
+            </button>
+            <button class="btn btn-outline-primary rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#addPlaceModal">
+                <i class="bi bi-plus-lg me-1"></i> Place
+            </button>
+            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#addLocationModal">
+                <i class="bi bi-plus-lg me-2"></i>Add Pincode
+            </button>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-4 bg-white p-2 shadow-sm rounded-pill" id="locationTab" role="tablist" style="width: fit-content; border: 1px solid #eee;">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active rounded-pill px-4" id="pincode-tab" data-bs-toggle="pill" data-bs-target="#pincode-pane" type="button" role="tab">Pincodes</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4" id="place-tab" data-bs-toggle="pill" data-bs-target="#place-pane" type="button" role="tab">Places</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link rounded-pill px-4" id="district-tab" data-bs-toggle="pill" data-bs-target="#district-pane" type="button" role="tab">Districts</button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="locationTabContent">
+        
+        <div class="tab-pane fade show active" id="pincode-pane" role="tabpanel">
+            <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase">
+                                <tr>
+                                    <th class="ps-4">District</th>
+                                    <th>Place</th>
+                                    <th>Pincode</th>
+                                    <th>Status</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pin in pincodes %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-dark">{{ pin.place.district.district_name }}</td>
+                                    <td>{{ pin.place.place_name }}</td>
+                                    <td><span class="badge bg-light text-dark border">{{ pin.pincode_number }}</span></td>
+                                    <td><span class="badge bg-success rounded-pill">{{ pin.status }}</span></td>
+                                    <td class="text-end pe-4">
+                                        <a href="javascript:void(0)" class="btn btn-sm btn-outline-danger border-0" 
+                                           onclick="confirmDelete('{% url 'delete_location' pin.id %}', 'Remove this pincode?')">
+                                            <i class="bi bi-trash3"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="5" class="text-center py-5 text-muted">No pincodes added yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="place-pane" role="tabpanel">
+            <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase">
+                                <tr>
+                                    <th class="ps-4">Belongs to District</th>
+                                    <th>Place Name</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for pl in places %}
+                                <tr>
+                                    <td class="ps-4">{{ pl.district.district_name }}</td>
+                                    <td class="fw-bold">{{ pl.place_name }}</td>
+                                    <td class="text-end pe-4">
+                                        <a href="javascript:void(0)" class="btn btn-sm btn-outline-danger border-0" 
+                                           onclick="confirmDelete('{% url 'delete_place' pl.id %}', 'Deleting this place will remove all its Pincodes. Continue?')">
+                                            <i class="bi bi-trash3"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center py-5 text-muted">No places added yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="district-pane" role="tabpanel">
+            <div class="card border-0 shadow-sm" style="border-radius: 15px;">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="bg-light text-muted small text-uppercase">
+                                <tr>
+                                    <th class="ps-4">District Name</th>
+                                    <th>Total Places</th>
+                                    <th class="text-end pe-4">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for dist in districts %}
+                                <tr>
+                                    <td class="ps-4 fw-bold text-primary">{{ dist.district_name }}</td>
+                                    <td>{{ dist.places.count }}</td>
+                                    <td class="text-end pe-4">
+                                        <a href="javascript:void(0)" class="btn btn-sm btn-outline-danger border-0" 
+                                           onclick="confirmDelete('{% url 'delete_district' dist.id %}', 'WARNING: This will delete ALL Places and Pincodes in this District! Are you sure?')">
+                                            <i class="bi bi-trash3"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr><td colspan="3" class="text-center py-5 text-muted">No districts added yet.</td></tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addDistrictModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">New District</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_district">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">DISTRICT NAME</label>
+                        <input type="text" name="district_name" class="form-control form-control-lg" placeholder="e.g. Ernakulam" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold">Create District</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addPlaceModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">New Place</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_place">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">SELECT DISTRICT</label>
+                        <select name="district_id" class="form-select" required>
+                            <option value="" selected disabled>Choose District...</option>
+                            {% for dist in districts %}
+                            <option value="{{ dist.id }}">{{ dist.district_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">PLACE NAME</label>
+                        <input type="text" name="place_name" class="form-control form-control-lg" placeholder="e.g. Aluva" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold">Create Place</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="addLocationModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="fw-bold">New Pincode Entry</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_pincode">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">STEP 1: DISTRICT</label>
+                        <select id="district_select" class="form-select" required onchange="filterPlaces()">
+                            <option value="" selected disabled>Choose District...</option>
+                            {% for dist in districts %}
+                            <option value="{{ dist.id }}">{{ dist.district_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">STEP 2: PLACE</label>
+                        <select name="place_id" id="place_select" class="form-select" required disabled>
+                            <option value="" selected disabled>Select district first</option>
+                            {% for pl in places %}
+                            <option value="{{ pl.id }}" data-district="{{ pl.district.id }}">{{ pl.place_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label small fw-bold text-muted">STEP 3: PINCODE NUMBER</label>
+                        <input type="text" name="pincode_number" class="form-control form-control-lg" placeholder="e.g. 682001" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold">Finalize Pincode</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+// Professional Delete Alert
+function confirmDelete(url, message) {
+    Swal.fire({
+        title: 'Are you sure?',
+        text: message,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel',
+        borderRadius: '15px'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    })
+}
+
+function filterPlaces() {
+    const districtId = document.getElementById('district_select').value;
+    const placeSelect = document.getElementById('place_select');
+    const options = placeSelect.querySelectorAll('option');
+
+    placeSelect.disabled = false;
+    placeSelect.value = ""; 
+
+    options.forEach(option => {
+        if (option.getAttribute('data-district') === districtId || option.value === "") {
+            option.style.display = "block";
+        } else {
+            option.style.display = "none";
+        }
+    });
+}
+</script>
+
+{% endblock %}

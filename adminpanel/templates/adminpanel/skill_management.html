@@ -1,0 +1,181 @@
+{% extends 'adminpanel/base_admin.html' %}
+{% block content %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="fw-bold mb-0">Skill & Category Management</h2>
+            <p class="text-muted small">Define service categories and their underlying specialized skills</p>
+        </div>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-dark rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                📁 New Category
+            </button>
+            <button class="btn btn-primary rounded-pill px-4" data-bs-toggle="modal" data-bs-target="#skillModal">
+                ⚡ Add Skill
+            </button>
+        </div>
+    </div>
+
+    <ul class="nav nav-pills mb-4 bg-white p-2 shadow-sm rounded-pill" id="mgmtTab" style="width: fit-content; border: 1px solid #eee;">
+        <li class="nav-item">
+            <button class="nav-link active rounded-pill px-4" id="skill-tab" data-bs-toggle="pill" data-bs-target="#skill-pane">Skills List</button>
+        </li>
+        <li class="nav-item">
+            <button class="nav-link rounded-pill px-4" id="cat-tab" data-bs-toggle="pill" data-bs-target="#cat-pane">Categories</button>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane fade show active" id="skill-pane">
+            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Category</th>
+                                <th>Skill Name</th>
+                                <th>Status</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for s in skills %}
+                            <tr>
+                                <td class="ps-4"><span class="badge bg-secondary-soft text-dark">{{ s.category.category_name }}</span></td>
+                                <td class="fw-bold">{{ s.skill_name }}</td>
+                                <td><span class="badge bg-success rounded-pill">Active</span></td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-danger border-0" onclick="confirmAction('{% url 'delete_skill' s.id %}', 'Remove this skill?', 'skill-tab')">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="4" class="text-center py-5 text-muted">No skills defined yet.</td></tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="cat-pane">
+            <div class="card border-0 shadow-sm" style="border-radius: 20px;">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="bg-light text-muted small text-uppercase">
+                            <tr>
+                                <th class="ps-4">Category Name</th>
+                                <th>Skills Count</th>
+                                <th class="text-end pe-4">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for c in categories %}
+                            <tr>
+                                <td class="ps-4 fw-bold text-primary">{{ c.category_name }}</td>
+                                <td>{{ c.skills.count }} Skills</td>
+                                <td class="text-end pe-4">
+                                    <button class="btn btn-sm btn-outline-danger border-0" onclick="confirmAction('{% url 'delete_category' c.id %}', 'Deleting this category will remove ALL related skills! Continue?', 'cat-tab')">
+                                        <i class="bi bi-trash3"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="categoryModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_category">
+                <div class="modal-header border-0">
+                    <h5 class="fw-bold">New Service Category</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <label class="form-label small text-muted fw-bold">CATEGORY NAME (TIP: USE EMOJIS! 🧹)</label>
+                    <input type="text" name="category_name" class="form-control form-control-lg" placeholder="e.g. 🧹 Cleaning" required>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-dark w-100 py-3 rounded-pill fw-bold">Create Category</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="skillModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow" style="border-radius: 20px;">
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="add_skill">
+                <div class="modal-header border-0">
+                    <h5 class="fw-bold">New Specialization Skill</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label small text-muted fw-bold">SELECT CATEGORY</label>
+                        <select name="category_id" class="form-select" required>
+                            <option value="" disabled selected>Choose category...</option>
+                            {% for c in categories %}
+                            <option value="{{ c.id }}">{{ c.category_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label small text-muted fw-bold">SKILL NAME</label>
+                        <input type="text" name="skill_name" class="form-control form-control-lg" placeholder="e.g. Deep Sofa Cleaning" required>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="submit" class="btn btn-primary w-100 py-3 rounded-pill fw-bold">Finalize Skill</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    // Tab persistence
+    document.addEventListener("DOMContentLoaded", () => {
+        const activeTab = localStorage.getItem('activeSkillTab');
+        if (activeTab) {
+            const btn = document.getElementById(activeTab);
+            if (btn) new bootstrap.Tab(btn).show();
+        }
+        document.querySelectorAll('button[data-bs-toggle="pill"]').forEach(b => {
+            b.addEventListener('shown.bs.tab', () => localStorage.setItem('activeSkillTab', b.id));
+        });
+    });
+
+    function confirmAction(url, msg, tabId) {
+        Swal.fire({
+            title: 'System Confirmation',
+            text: msg,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#000',
+            confirmButtonText: 'Confirm Delete',
+            borderRadius: '20px'
+        }).then((res) => {
+            if (res.isConfirmed) {
+                localStorage.setItem('activeSkillTab', tabId);
+                window.location.href = url;
+            }
+        });
+    }
+</script>
+{% endblock %}

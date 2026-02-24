@@ -1,0 +1,140 @@
+{% extends 'doer/base_doer.html' %}
+
+{% block page_title %}Edit Profile - Doer Hub{% endblock %}
+{% block content_title %}Account Settings{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <form method="POST" enctype="multipart/form-data" id="profileForm" novalidate>
+            {% csrf_token %}
+            
+            <div class="card border-0 shadow-sm mb-4" style="border-radius: 16px;">
+                <div class="card-body p-4">
+                    <h5 class="fw-bold mb-4" style="color: var(--forest-base); border-bottom: 2px solid var(--soft-emerald); padding-bottom: 10px;">
+                        <i class="bi bi-person-badge text-emerald me-2"></i>Personal Details
+                    </h5>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-12 text-center mb-3">
+                            <div class="position-relative d-inline-block">
+                                <div id="photo-preview-container" style="width: 90px; height: 90px; background: var(--soft-emerald); overflow: hidden;" class="rounded-circle d-flex align-items-center justify-content-center border border-2 border-emerald">
+                                    {% if user.photo %}
+                                        <img src="{{ user.photo.url }}" id="profile-img-preview" class="rounded-circle w-100 h-100" style="object-fit: cover;">
+                                    {% else %}
+                                        <i class="bi bi-person text-emerald" style="font-size: 2.5rem;"></i>
+                                    {% endif %}
+                                </div>
+                                <label for="photo_upload" class="position-absolute bottom-0 end-0 badge rounded-circle bg-emerald p-2 border border-white" style="cursor: pointer;">
+                                    <i class="bi bi-camera-fill text-white"></i>
+                                    <input type="file" id="photo_upload" name="photo" accept="image/*" hidden onchange="previewImage(this)">
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Full Name</label>
+                            <input type="text" name="name" id="name_field" class="form-control border-2" value="{{ user.name }}" style="border-radius: 8px;">
+                            <div id="name_error" class="error-msg text-danger small fw-bold mt-1"></div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label small fw-bold text-uppercase text-muted">Phone Number</label>
+                            <input type="text" name="phone" id="phone_field" class="form-control border-2" value="{{ user.phone|default:'' }}" style="border-radius: 8px;" oninput="this.value = this.value.replace(/[^0-9]/g, '').substring(0, 10);">
+                            <div id="phone_error" class="error-msg text-danger small fw-bold mt-1"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="d-flex gap-3">
+                <button type="submit" class="btn btn-lg w-100 fw-bold" style="background: var(--emerald-accent); color: white; border-radius: 12px;">
+                    Update Profile
+                </button>
+                <a href="{% url 'doer_profile_view' %}" class="btn btn-lg btn-light w-100 fw-bold" style="border-radius: 12px; border: 1px solid var(--slate-border);">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                const container = document.getElementById('photo-preview-container');
+                container.innerHTML = `<img src="${e.target.result}" class="rounded-circle w-100 h-100" style="object-fit: cover;">`;
+            }
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    document.getElementById('profileForm').onsubmit = function(e) {
+        const nameInput = document.getElementById('name_field');
+        const phoneInput = document.getElementById('phone_field');
+        const nameErr = document.getElementById('name_error');
+        const phoneErr = document.getElementById('phone_error');
+        
+        // Reset previous errors
+        let isValid = true;
+        nameErr.innerText = "";
+        phoneErr.innerText = "";
+        nameInput.style.borderColor = "";
+        phoneInput.style.borderColor = "";
+
+        const nameValue = nameInput.value.trim();
+        const phoneValue = phoneInput.value.trim();
+
+        // 1. Name Validation (Letters only & Not Empty)
+        const nameRegex = /^[A-Za-z\s]+$/;
+        if (nameValue === "") {
+            nameErr.innerText = "Name cannot be empty.";
+            nameInput.style.borderColor = "#dc3545";
+            isValid = false;
+        } else if (!nameRegex.test(nameValue)) {
+            nameErr.innerText = "Name must contain only letters.";
+            nameInput.style.borderColor = "#dc3545";
+            isValid = false;
+        }
+
+        // 2. Phone Validation (Exactly 10 Digits & Not Empty)
+        const phoneRegex = /^\d{10}$/;
+        if (phoneValue === "") {
+            phoneErr.innerText = "Phone number is required.";
+            phoneInput.style.borderColor = "#dc3545";
+            isValid = false;
+        } else if (!phoneRegex.test(phoneValue)) {
+            phoneErr.innerText = "Phone number must be exactly 10 digits.";
+            phoneInput.style.borderColor = "#dc3545";
+            isValid = false;
+        }
+
+        // 3. Password Check (if fields exist)
+        const pass = document.getElementById('new_password') ? document.getElementById('new_password').value : null;
+        const confirm = document.getElementById('confirm_password') ? document.getElementById('confirm_password').value : null;
+        if (pass && confirm && pass !== confirm) {
+            alert("Passwords do not match!");
+            isValid = false;
+        }
+
+        if (!isValid) {
+            e.preventDefault(); // Stop form submission
+            return false;
+        }
+        return true;
+    };
+</script>
+
+<style>
+    .form-control:focus {
+        border-color: var(--emerald-accent);
+        box-shadow: 0 0 0 0.25rem rgba(16, 185, 129, 0.1);
+    }
+    .bg-emerald { background-color: var(--emerald-accent); }
+    .text-emerald { color: var(--emerald-accent) !important; }
+    .border-emerald { border-color: var(--emerald-accent) !important; }
+    .error-msg { font-size: 0.825rem; min-height: 1.2rem; }
+</style>
+{% endblock %}
