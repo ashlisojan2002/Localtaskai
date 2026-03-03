@@ -39,10 +39,7 @@
                         <label class="text-muted small fw-bold text-uppercase">Phone Number</label>
                         <p class="fs-5 fw-bold text-dark mb-0">{{ user.phone|default:"---" }}</p>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small fw-bold text-uppercase">Verification ID (Aadhar)</label>
-                        <p class="fs-5 fw-bold text-dark mb-0">{% if user.adhar_card %}{{ user.adhar_card }}{% else %}<span class="badge bg-light text-muted fw-normal">Pending Link</span>{% endif %}</p>
-                    </div>
+                  
                     <div class="col-md-6">
                         <label class="text-muted small fw-bold text-uppercase">Trust Score</label>
                         <p class="fs-5 fw-bold mb-0">

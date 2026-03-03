@@ -40,10 +40,7 @@
                         <label class="text-muted small fw-bold text-uppercase">Phone Number</label>
                         <p class="fs-5 fw-bold text-dark mb-0">{{ user.phone|default:"---" }}</p>
                     </div>
-                    <div class="col-md-6">
-                        <label class="text-muted small fw-bold text-uppercase">Company / Identity</label>
-                        <p class="fs-5 fw-bold text-dark mb-0">{% if user.company_name %}{{ user.company_name }}{% else %}<span class="badge bg-light text-muted fw-normal">Individual Giver</span>{% endif %}</p>
-                    </div>
+                    
                     <div class="col-md-6">
                         <label class="text-muted small fw-bold text-uppercase">Verification Status</label>
                         <p class="fs-5 fw-bold mb-0">

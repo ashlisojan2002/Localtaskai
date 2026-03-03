@@ -7,6 +7,9 @@ from django.contrib import messages
 import re
 from django.core.files.base import ContentFile
 import base64
+from django.shortcuts import render
+from giver.models import Task  # Import Task from the giver app
+from adminpanel.models import District, Category, Skill # Import these from adminpanel
 
 @login_required
 def doer_profile_view(request):
@@ -150,3 +153,34 @@ def verification_badge(request):
             messages.error(request, f"Error saving: {e}")
     
     return render(request, "doer/verification_badge.html")
+
+
+
+
+
+
+
+@login_required
+def doer_task_feed(request):
+    # Only show active tasks that are still 'Open'
+    tasks = Task.objects.filter(is_active=True, status='Open').order_by('-created_at')
+    
+    # Get parameters from the URL
+    district_id = request.GET.get('district')
+    skill_id = request.GET.get('skill')
+    min_budget = request.GET.get('min_budget') # Added this
+    
+    # Apply Filters
+    if district_id:
+        tasks = tasks.filter(district_id=district_id)
+    if skill_id:
+        tasks = tasks.filter(skill_id=skill_id)
+    if min_budget:
+        tasks = tasks.filter(budget__gte=min_budget) # Filter tasks with budget >= min_budget
+
+    context = {
+        'tasks': tasks,
+        'districts': District.objects.all(),
+        'skills': Skill.objects.all(),
+    }
+    return render(request, 'doer/task_feed.html', context)

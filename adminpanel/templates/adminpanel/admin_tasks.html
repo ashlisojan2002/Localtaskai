@@ -1,0 +1,122 @@
+{% extends 'adminpanel/base_admin.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+        <h5 class="mb-0 fw-bold">
+            <i class="bi bi-list-task me-2 text-primary"></i>
+            {% if viewing_user %}Tasks by {{ viewing_user.name }}{% else %}Global Task Monitor{% endif %}
+        </h5>
+        <span class="badge bg-success" id="ws-status">Live Monitoring Active</span>
+    </div>
+    
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+            <thead class="bg-light">
+                <tr>
+                    <th>ID</th>
+                    <th>Task Title</th>
+                    <th>Giver</th>
+                    <th>Budget</th>
+                    <th>Status</th>
+                    <th>Posted At</th>
+                    <th class="text-end">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="admin-task-container">
+                {% for task in tasks %}
+                <tr id="task-row-{{ task.id }}">
+                    <td><small class="text-muted">#{{ task.id }}</small></td>
+                    <td><span class="fw-medium">{{ task.title }}</span></td>
+                    <td>
+                        {% if task.giver %}
+                        <a href="?user_id={{ task.giver.id }}" class="text-decoration-none">
+                            <div class="badge bg-light text-dark d-block mb-1 text-start">
+                                <i class="bi bi-person me-1"></i>{{ task.giver.name|default:task.giver.username }}
+                            </div>
+                            <small class="text-muted d-block ps-1">{{ task.giver.email|default:"No Email" }}</small>
+                        </a>
+                        {% else %}
+                        <span class="text-muted small">No Giver Info</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-success fw-bold">₹{{ task.budget }}</td>
+                    <td>
+                        <span class="badge {% if task.status == 'Open' %}bg-primary{% else %}bg-secondary{% endif %}">
+                            {{ task.status }}
+                        </span>
+                    </td>
+                    <td class="small">{{ task.created_at|date:"M d, H:i" }}</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-outline-danger" 
+                                onclick="confirmDelete('{{ task.id }}', '{% url 'admin_delete_task' task.id %}')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // SweetAlert Delete Function
+    function confirmDelete(taskId, deleteUrl) {
+        Swal.fire({
+            title: 'Delete Task?',
+            text: "This action cannot be undone!",
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Yes, delete it!',
+            cancelButtonText: 'Cancel'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                window.location.href = deleteUrl;
+            }
+        })
+    }
+
+    const socket = new WebSocket('ws://' + window.location.host + '/ws/tasks/');
+
+    socket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'new_task_alert') {
+            const task = data.task_data;
+            
+            const urlParams = new URLSearchParams(window.location.search);
+            const filterUserId = urlParams.get('user_id');
+            if (filterUserId && task.giver_id != filterUserId) return;
+
+            const newRowHtml = `
+                <tr id="task-row-${task.id}" class="table-warning animate__animated animate__fadeInDown">
+                    <td><small class="text-muted">#${task.id}</small></td>
+                    <td><span class="fw-bold text-primary">${task.title}</span> <span class="badge bg-warning text-dark small">NEW</span></td>
+                    <td>
+                        <div class="badge bg-light text-dark d-block mb-1 text-start">
+                            <i class="bi bi-person me-1"></i>${task.giver_name || "New User"}
+                        </div>
+                        <small class="text-muted d-block ps-1">${task.giver_email || ""}</small>
+                    </td>
+                    <td class="text-success fw-bold">₹${task.budget}</td>
+                    <td><span class="badge bg-primary">Open</span></td>
+                    <td class="small">Just now</td>
+                    <td class="text-end">
+                        <button class="btn btn-sm btn-danger" 
+                                onclick="confirmDelete('${task.id}', '/admin-panel/delete-task/${task.id}/')">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    </td>
+                </tr>
+            `;
+            
+            const container = document.getElementById('admin-task-container');
+            container.insertAdjacentHTML('afterbegin', newRowHtml);
+        }
+    };
+</script>
+{% endblock %}

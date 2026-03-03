@@ -7,7 +7,7 @@ from django.shortcuts import render, redirect
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import District, Place, Pincode
 from .models import Category, Skill
-
+from giver.models import Task
 
 
 # Security: Only allow Superusers to see this page
@@ -172,4 +172,29 @@ def delete_skill(request, pk):
     get_object_or_404(Skill, id=pk).delete()
     return redirect('skill_management')
 
+
+
+
+
+@user_passes_test(is_admin)
+def admin_task_management(request):
+    user_id = request.GET.get('user_id')
+    
+    if user_id:
+        tasks = Task.objects.filter(giver_id=user_id).order_by('-created_at')
+        viewing_user = get_object_or_404(User, id=user_id)
+    else:
+        tasks = Task.objects.all().order_by('-created_at')
+        viewing_user = None
+
+    return render(request, 'adminpanel/admin_tasks.html', {
+        'tasks': tasks,
+        'viewing_user': viewing_user
+    })
+
+@user_passes_test(is_admin)
+def admin_delete_task(request, pk):
+    task = get_object_or_404(Task, id=pk)
+    task.delete()
+    return redirect('admin_task_management')
 

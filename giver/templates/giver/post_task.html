@@ -1,0 +1,197 @@
+{% extends 'giver/base_giver.html' %}
+{% block content %}
+<style>
+    :root {
+        --glass-bg: rgba(255, 255, 255, 0.95);
+        --border-color: #e2e8f0;
+        --primary-blue: #2563eb;
+    }
+    .form-section {
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        transition: all 0.3s ease;
+    }
+    .form-section:hover {
+        border-color: var(--primary-blue);
+    }
+    .section-title {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        border-bottom: 1px solid var(--border-color);
+        margin-bottom: 1.5rem;
+        padding-bottom: 0.5rem;
+    }
+    .form-control, .form-select {
+        border: 1px solid var(--border-color);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        font-size: 0.95rem;
+    }
+    .form-control:focus, .form-select:focus {
+        box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        border-color: var(--primary-blue);
+    }
+    .btn-broadcast {
+        background-color: var(--primary-blue);
+        color: white;
+        font-weight: 600;
+        padding: 1rem;
+        border-radius: 8px;
+        border: none;
+        transition: transform 0.2s;
+    }
+    .btn-broadcast:hover {
+        background-color: #1d4ed8;
+        transform: translateY(-1px);
+    }
+</style>
+
+<div class="container-fluid py-4">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2 class="fw-bold mb-1">Post a New Task</h2>
+                    <p class="text-muted">Describe the service you need and find skilled doers nearby.</p>
+                </div>
+            </div>
+
+            <form method="POST" id="taskForm">
+                {% csrf_token %}
+
+                <div class="form-section p-4 mb-4 shadow-sm">
+                    <h5 class="section-title fw-bold"><i class="bi bi-info-circle me-2"></i>General Information</h5>
+                    <div class="row g-4">
+                        <div class="col-md-8">
+                            <label class="form-label fw-semibold">Task Title</label>
+                            <input type="text" name="title" class="form-control" placeholder="e.g., Professional Home Cleaning" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Budget (₹)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light">₹</span>
+                                <input type="number" name="budget" class="form-control" placeholder="0.00" required>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label fw-semibold">Description</label>
+                            <textarea name="description" class="form-control" rows="4" placeholder="Briefly describe the job requirements..."></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section p-4 mb-4 shadow-sm">
+                    <h5 class="section-title fw-bold"><i class="bi bi-tags me-2"></i>Service Classification</h5>
+                    <div class="row g-4">
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Category</label>
+                            <select id="id_category" name="category" class="form-select" required>
+                                <option value="">Choose a category</option>
+                                {% for cat in categories %}
+                                <option value="{{ cat.id }}">{{ cat.category_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label fw-semibold">Specific Skill</label>
+                            <select id="id_skill" name="skill" class="form-select" required disabled>
+                                <option value="">Waiting for category...</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-section p-4 mb-4 shadow-sm">
+                    <h5 class="section-title fw-bold"><i class="bi bi-geo-alt me-2"></i>Location & Deadline</h5>
+                    <div class="row g-4">
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">District</label>
+                            <select id="id_district" name="district" class="form-select" required>
+                                <option value="">Select</option>
+                                {% for dist in districts %}
+                                <option value="{{ dist.id }}">{{ dist.district_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Place</label>
+                            <select id="id_place" name="place" class="form-select" required disabled></select>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label fw-semibold">Pincode</label>
+                            <select id="id_pincode" name="pincode" class="form-select" required disabled></select>
+                        </div>
+                        <div class="col-md-12">
+                            <label class="form-label fw-semibold text-primary">Deadline (When should this be finished?)</label>
+                            <div class="input-group">
+                                <span class="input-group-text bg-white"><i class="bi bi-calendar-event"></i></span>
+                                <input type="text" name="deadline_datetime" class="form-control datetimepicker" placeholder="Select completion date & time" required>
+                            </div>
+                            <small class="text-muted">Note: Task will automatically expire once this deadline is reached.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-5">
+                    <button type="submit" class="btn btn-broadcast w-100 shadow-sm">
+                        <i class="bi bi-megaphone me-2"></i> Publish Task to Network
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+
+<script>
+    flatpickr(".datetimepicker", { 
+        enableTime: true, 
+        dateFormat: "Y-m-d H:i", 
+        minDate: "today",
+        time_24hr: true 
+    });
+
+    // --- Reuse your existing AJAX Logic here ---
+    $("#id_category").change(function() {
+        const url = "{% url 'ajax_load_skills' %}";
+        $.ajax({
+            url: url, data: {'category_id': $(this).val()},
+            success: function(data) {
+                let html = '<option value="">Select Skill</option>';
+                data.forEach(s => { html += `<option value="${s.id}">${s.skill_name}</option>`; });
+                $("#id_skill").html(html).prop('disabled', false);
+            }
+        });
+    });
+
+    $("#id_district").change(function() {
+        const url = "{% url 'ajax_load_places' %}";
+        $.ajax({
+            url: url, data: {'district_id': $(this).val()},
+            success: function(data) {
+                let html = '<option value="">Select Place</option>';
+                data.forEach(p => { html += `<option value="${p.id}">${p.place_name}</option>`; });
+                $("#id_place").html(html).prop('disabled', false);
+            }
+        });
+    });
+
+    $("#id_place").change(function() {
+        const url = "{% url 'ajax_load_pincodes' %}";
+        $.ajax({
+            url: url, data: {'place_id': $(this).val()},
+            success: function(data) {
+                let html = '<option value="">Select Pincode</option>';
+                data.forEach(pin => { html += `<option value="${pin.id}">${pin.pincode_number}</option>`; });
+                $("#id_pincode").html(html).prop('disabled', false);
+            }
+        });
+    });
+</script>
+{% endblock %}

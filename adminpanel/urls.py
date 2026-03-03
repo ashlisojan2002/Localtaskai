@@ -27,5 +27,7 @@ path('delete-district/<int:pk>/', views.delete_district, name='delete_district')
     # Using <int:pk> is the standard professional approach for primary keys
     path('skills/category/delete/<int:pk>/', views.delete_category, name='delete_category'),
     path('skills/delete/<int:pk>/', views.delete_skill, name='delete_skill'),
+    path('tasks/', views.admin_task_management, name='admin_task_management'),
+path('delete-task/<int:pk>/', views.admin_delete_task, name='admin_delete_task'),
 
 ]

@@ -61,7 +61,6 @@
 
         .nav-links a:hover { color: var(--emerald-accent); }
 
-        /* Logic for Active Emerald Line */
         .nav-links a.active-link {
             color: var(--forest-base);
         }
@@ -105,13 +104,11 @@
 
         .btn-logout:hover { background: #fee2e2; }
 
-        /* --- MAIN CONTENT --- */
         .main-wrapper {
             flex: 1;
             padding: 2.5rem 0;
         }
 
-        /* --- FOOTER --- */
         footer {
             background: var(--forest-base);
             color: #ffffff;
@@ -136,7 +133,11 @@
                         Dashboard
                     </a>
                 </li>
-                <li><a href="#">Find Work</a></li>
+                <li>
+                    <a href="{% url 'doer_task_feed' %}" class="{% if request.resolver_match.url_name == 'doer_task_feed' %}active-link{% endif %}">
+                        Find Work
+                    </a>
+                </li>
                 <li><a href="#">My Tasks</a></li>
                 <li>
                     <a href="{% url 'doer_profile_view' %}" class="{% if request.resolver_match.url_name == 'doer_profile_view' %}active-link{% endif %}">

@@ -7,4 +7,5 @@ urlpatterns = [
     path('profile/delete/', views.doer_account_delete, name='doer_account_delete'),
     path('profile/change-password/', views.change_password, name='change_password'),
     path('verification/', views.verification_badge, name='verification_badge'),
+    path('task-feed/', views.doer_task_feed, name='doer_task_feed'),
 ]

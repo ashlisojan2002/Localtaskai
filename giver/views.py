@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -7,6 +7,13 @@ from django.contrib import messages
 import re
 from django.core.files.base import ContentFile
 import base64
+from django.http import JsonResponse
+from .models import Task
+from adminpanel.models import District, Place, Pincode, Category, Skill
+from asgiref.sync import async_to_sync
+from channels.layers import get_channel_layer
+from django.utils import timezone
+from datetime import datetime
 
 @login_required
 def giver_profile_view(request):
@@ -118,3 +125,104 @@ def giver_verification(request):
             messages.error(request, f"An error occurred during submission: {e}")
 
     return render(request, "giver/identity_verification.html")
+
+
+
+
+def post_task(request):
+    if request.method == "POST":
+        # 1. Get the string from POST
+        deadline_str = request.POST.get('deadline_datetime')
+        
+        # 2. Safety check: Convert string to a real Python datetime object
+        try:
+            # Matches 'YYYY-MM-DD HH:MM' format from HTML datetime-local
+            # Note: some browsers use 'YYYY-MM-DDTHH:MM', if so, use '%Y-%m-%dT%H:%M'
+            naive_datetime = datetime.strptime(deadline_str.replace('T', ' '), '%Y-%m-%d %H:%M')
+            aware_deadline = timezone.make_aware(naive_datetime)
+        except (ValueError, TypeError):
+            # Fallback if date is missing or malformed
+            aware_deadline = timezone.now() + timezone.timedelta(days=1)
+
+        # 3. Create the Task
+        new_task = Task.objects.create(
+            giver=request.user,
+            category_id=request.POST.get('category'),
+            skill_id=request.POST.get('skill'),
+            district_id=request.POST.get('district'),
+            place_id=request.POST.get('place'),
+            pincode_id=request.POST.get('pincode'),
+            title=request.POST.get('title'),
+            description=request.POST.get('description'),
+            budget=request.POST.get('budget'),
+            deadline_datetime=aware_deadline,
+        )
+
+        # 4. WEBSOCKET BROADCAST (Channels)
+        channel_layer = get_channel_layer()
+        async_to_sync(channel_layer.group_send)(
+            'public_task_feed', 
+            {
+                'type': 'new_task_alert',
+                'task_data': {
+                    'id': new_task.id,
+                    'title': new_task.title,
+                    'budget': str(new_task.budget),
+                    'district': new_task.district.district_name if new_task.district else "N/A",
+                    'place': new_task.place.place_name if new_task.place else "N/A",
+                }
+            }
+        )
+        return redirect('my_tasks')
+
+    # GET request: Load initial data for the form
+    context = {
+        'districts': District.objects.all(),
+        'categories': Category.objects.all(),
+    }
+    return render(request, 'giver/post_task.html', context)
+
+# --- AJAX Loaders for Dependent Dropdowns ---
+
+def load_places(request):
+    district_id = request.GET.get('district_id')
+    places = Place.objects.filter(district_id=district_id).values('id', 'place_name')
+    return JsonResponse(list(places), safe=False)
+
+def load_pincodes(request):
+    place_id = request.GET.get('place_id')
+    pincodes = Pincode.objects.filter(place_id=place_id).values('id', 'pincode_number')
+    return JsonResponse(list(pincodes), safe=False)
+
+def load_skills(request):
+    category_id = request.GET.get('category_id')
+    skills = Skill.objects.filter(category_id=category_id).values('id', 'skill_name')
+    return JsonResponse(list(skills), safe=False)
+
+# --- Task Management ---
+
+def my_tasks(request):
+    # Fetch tasks belonging to the logged-in giver
+    tasks = Task.objects.filter(giver=request.user).order_by('-created_at')
+    status_filter = request.GET.get('status')
+    
+    # 3. Apply filter if it's not empty
+    if status_filter:
+        tasks = tasks.filter(status=status_filter)
+    # Make sure 'my_task.html' matches your actual filename
+    return render(request, 'giver/my_task.html', {'tasks': tasks})
+
+def delete_task(request, pk):
+    # Get the task or return 404 if not found
+    # We filter by giver=request.user to ensure only the owner can delete it
+    task = get_object_or_404(Task, id=pk, giver=request.user)
+    
+    # You can either completely delete the record:
+    task.delete()
+    
+    # OR, if you prefer a "soft delete" (keeping the data but hiding it):
+    # task.status = 'Cancelled'
+    # task.is_active = False
+    # task.save()
+    
+    return redirect('my_tasks')

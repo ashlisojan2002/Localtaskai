@@ -38,16 +38,17 @@
             height: 70px;
         }
 
-        .nav-links {
+        .nav-links-list {
             display: flex;
             gap: 2rem;
             list-style: none;
             margin: 0;
             padding: 0;
             height: 100%;
+            align-items: center;
         }
 
-        .nav-links a {
+        .nav-links-list a {
             text-decoration: none;
             color: #64748b;
             font-weight: 600;
@@ -59,13 +60,13 @@
             transition: 0.3s;
         }
 
-        .nav-links a:hover { color: var(--emerald-accent); }
+        .nav-links-list a:hover { color: var(--emerald-accent); }
 
-        .nav-links a.active-link {
+        .nav-links-list a.active-link {
             color: var(--forest-base);
         }
 
-        .nav-links a.active-link::after {
+        .nav-links-list a.active-link::after {
             content: "";
             position: absolute;
             bottom: -2px;
@@ -81,15 +82,6 @@
             display: flex;
             align-items: center;
             gap: 1rem;
-        }
-
-        .status-pill {
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 4px 12px;
-            border-radius: 50px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
         .btn-logout {
@@ -129,16 +121,24 @@
 
     <nav class="giver-nav sticky-top">
         <div class="container nav-container">
-            <ul class="nav-links">
+            <ul class="nav-links-list">
                 <li>
                     <a href="{% url 'giver_home' %}" class="{% if request.resolver_match.url_name == 'giver_home' %}active-link{% endif %}">
                         Overview
                     </a>
                 </li>
-                <li><a href="">My Postings</a></li>
-                <li><a href="{% url 'giver_profile_view' %}">Profile</a></li>
-                <li><a href="{% url 'giver_verification' %}">verification Badge
-                </a></li>
+                <li>
+                    <a href="{% url 'my_tasks' %}" class="{% if request.resolver_match.url_name == 'my_tasks' %}active-link{% endif %}">
+                        My Postings
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'post_task' %}" class="{% if request.resolver_match.url_name == 'post_task' %}active-link{% endif %}">
+                        <i class="bi bi-plus-circle me-1"></i> Post Task
+                    </a>
+                </li>
+                <li><a href="{% url 'giver_profile_view' %}" class="{% if request.resolver_match.url_name == 'giver_profile_view' %}active-link{% endif %}">Profile</a></li>
+                <li><a href="{% url 'giver_verification' %}" class="{% if request.resolver_match.url_name == 'giver_verification' %}active-link{% endif %}">Verification</a></li>
             </ul>
 
             <div class="user-status-box">

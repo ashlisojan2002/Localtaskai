@@ -67,7 +67,6 @@
             background: rgba(255, 255, 255, 0.08);
         }
 
-        /* Corrected Active State Logic */
         .admin-nav-link.active {
             color: #ffffff;
             background: var(--accent-color);
@@ -110,28 +109,26 @@
         <a href="{% url 'admin_dashboard' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
             <i class="bi bi-grid-1x2-fill"></i> Overview
         </a>
+
         <a href="{% url 'admin_user_management' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'admin_user_management' %}active{% endif %}">
             <i class="bi bi-people-fill"></i> Users
         </a>
-        <a href="#" class="admin-nav-link">
+
+        <a href="{% url 'admin_task_management' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'admin_task_management' %}active{% endif %}">
             <i class="bi bi-clipboard2-check-fill"></i> Tasks
         </a>
+
+        <a href="{% url 'location_management' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'location_management' %}active{% endif %}">
+            <i class="bi bi-geo-alt-fill"></i> Locations
+        </a>
+
+        <a href="{% url 'skill_management' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'skill_management' %}active{% endif %}">
+            <i class="bi bi-tools"></i> Skills & Categories
+        </a>
+
         <a href="#" class="admin-nav-link">
             <i class="bi bi-gear-fill"></i> Settings
         </a>
-        <li class="mb-2">
-    <a href="{% url 'location_management' %}"
-       class="block px-4 py-2 rounded hover:bg-purple-600 hover:text-white">
-        📍 Location Management
-    </a>
-</li>
-<li class="nav-item">
-    <a class="nav-link {% if request.resolver_match.url_name == 'skill_management' %}active bg-primary text-white{% else %}text-dark{% endif %} rounded-pill mb-2 px-3" 
-       href="{% url 'skill_management' %}">
-        <i class="bi bi-tools me-2"></i>
-        <span>Skills & Categories</span>
-    </a>
-</li>
     </div>
 </div>
 
