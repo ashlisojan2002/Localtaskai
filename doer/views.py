@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect,get_object_or_404
 from django.contrib.auth import update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -10,6 +10,7 @@ import base64
 from django.shortcuts import render
 from giver.models import Task  # Import Task from the giver app
 from adminpanel.models import District, Category, Skill # Import these from adminpanel
+from .models import TaskRequest
 
 @login_required
 def doer_profile_view(request):
@@ -184,3 +185,96 @@ def doer_task_feed(request):
         'skills': Skill.objects.all(),
     }
     return render(request, 'doer/task_feed.html', context)
+
+
+
+
+
+
+@login_required
+def task_detail_view(request, task_id):
+    # 1. Fetch the task with all related data
+    task = get_object_or_404(
+        Task.objects.select_related('district', 'place', 'pincode', 'giver', 'category', 'skill'), 
+        id=task_id
+    )
+    
+    # 2. Check if the current user (Doer) has already requested this task
+    # We look for 'Pending' or 'Accepted' statuses. 
+    # If the status is 'Cancelled', they should be able to request it again.
+    user_has_requested = TaskRequest.objects.filter(
+        task=task, 
+        doer=request.user
+    ).exclude(status='Cancelled').exists()
+    
+    return render(request, 'doer/task_detail.html', {
+        'task': task,
+        'user_has_requested': user_has_requested # This is the key for the button toggle
+    })
+
+
+@login_required
+def request_task(request, task_id):
+    if request.method == "POST":
+        task = get_object_or_404(Task, id=task_id)
+        
+        # 1. Prevent Givers from requesting their own tasks
+        if task.giver == request.user:
+            messages.error(request, "You cannot request your own task!")
+            return redirect('task_detail', task_id=task.id)
+
+        # 2. Get or Create the request (handles "Multiple Doer" logic)
+        obj, created = TaskRequest.objects.get_or_create(
+            task=task, 
+            doer=request.user
+        )
+
+        if created:
+            messages.success(request, f"Request sent for {task.title}!")
+        else:
+            # If it already existed but was 'Cancelled', re-open it
+            if obj.status == 'Cancelled':
+                obj.status = 'Pending'
+                obj.save()
+                messages.success(request, "Request re-sent!")
+            else:
+                messages.info(request, "You have already requested this task.")
+
+        return redirect('task_detail', task_id=task.id)
+
+@login_required
+def cancel_task_request(request, task_id):
+    if request.method == "POST":
+        # Find the specific request by this Doer for this Task
+        task_request = get_object_or_404(TaskRequest, task_id=task_id, doer=request.user)
+        
+        # Change status instead of deleting (better for record keeping)
+        task_request.status = 'Cancelled'
+        task_request.save()
+        
+        messages.warning(request, "Your request has been cancelled.")
+        return redirect('task_detail', task_id=task_id)
+
+
+
+@login_required
+def chat_with_giver(request, task_id):
+    """
+    Placeholder for the chat system.
+    We will build the actual messaging logic later.
+    """
+    task = get_object_or_404(Task, id=task_id)
+    # For now, just show a simple message or redirect back
+    # We'll replace this with a real chat template soon!
+    return render(request, 'doer/chat_placeholder.html', {'task': task})
+
+@login_required
+def my_task_requests_view(request):
+    # Fetch all requests made by this Doer, ordered by the most recent first
+    my_requests = TaskRequest.objects.filter(doer=request.user).select_related(
+        'task', 'task__giver', 'task__district', 'task__place'
+    ).order_by('-created_at')
+
+    return render(request, 'doer/my_requests.html', {
+        'my_requests': my_requests
+    })

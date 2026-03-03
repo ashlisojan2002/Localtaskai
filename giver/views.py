@@ -226,3 +226,15 @@ def delete_task(request, pk):
     # task.save()
     
     return redirect('my_tasks')
+
+@login_required
+def view_task_requests(request):
+    # Fetch all tasks posted by this Giver
+    # Use prefetch_related to get the Doer requests efficiently
+    my_tasks = Task.objects.filter(giver=request.user).prefetch_related(
+        'task_requests', 'task_requests__doer'
+    ).order_by('-created_at')
+
+    return render(request, 'giver/view_requests.html', {
+        'my_tasks': my_tasks
+    })

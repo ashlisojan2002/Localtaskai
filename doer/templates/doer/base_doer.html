@@ -138,7 +138,11 @@
                         Find Work
                     </a>
                 </li>
-                <li><a href="#">My Tasks</a></li>
+                <li>
+                    <a href="{% url 'my_requests' %}" class="{% if request.resolver_match.url_name == 'my_requests' %}active-link{% endif %}">
+                        My Applications
+                    </a>
+                </li>
                 <li>
                     <a href="{% url 'doer_profile_view' %}" class="{% if request.resolver_match.url_name == 'doer_profile_view' %}active-link{% endif %}">
                         Profile

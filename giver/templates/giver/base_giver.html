@@ -133,6 +133,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{% url 'manage_requests' %}" class="{% if request.resolver_match.url_name == 'manage_requests' %}active-link{% endif %}">
+                        Manage Requests
+                    </a>
+                </li>
+                <li>
                     <a href="{% url 'post_task' %}" class="{% if request.resolver_match.url_name == 'post_task' %}active-link{% endif %}">
                         <i class="bi bi-plus-circle me-1"></i> Post Task
                     </a>

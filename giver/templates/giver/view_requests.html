@@ -1,0 +1,98 @@
+{% extends 'giver/base_giver.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <h3 class="fw-bold mb-4"><i class="bi bi-people text-primary me-2"></i>Manage Task Requests</h3>
+
+    {% for task in my_tasks %}
+    <div class="card shadow-sm border-0 rounded-4 mb-4 overflow-hidden">
+        <div class="card-header bg-white py-3 border-bottom">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <span class="badge bg-soft-primary text-primary mb-1">{{ task.category.name }}</span>
+                    <h5 class="fw-bold mb-0">{{ task.title }}</h5>
+                    <small class="text-muted"><i class="bi bi-calendar"></i> Posted on {{ task.created_at|date:"M d, Y" }}</small>
+                </div>
+                <div class="text-end">
+                    <span class="badge {% if task.status == 'Open' %}bg-success{% else %}bg-secondary{% endif %} rounded-pill px-3">
+                        {{ task.status }}
+                    </span>
+                    <div class="fw-bold text-dark mt-1">₹{{ task.budget }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+                {% for req in task.task_requests.all %}
+                    {% if req.status != 'Cancelled' %}
+                    <div class="list-group-item p-4">
+                        <div class="row align-items-center">
+                            <div class="col-md-5 d-flex align-items-center">
+                                {% if req.doer.photo %}
+                                    <img src="{{ req.doer.photo.url }}" class="rounded-circle border me-3" width="60" height="60" style="object-fit: cover;">
+                                {% else %}
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-3" style="width: 60px; height: 60px; font-size: 1.5rem;">
+                                        {{ req.doer.name|slice:":1" }}
+                                    </div>
+                                {% endif %}
+                                <div>
+                                    <h6 class="fw-bold mb-0">
+                                        {{ req.doer.name }}
+                                        {% if req.doer.approval_status == 'Accepted' %}
+                                            <i class="bi bi-patch-check-fill text-primary" title="Verified Doer"></i>
+                                        {% endif %}
+                                    </h6>
+                                    <small class="text-muted">Applied {{ req.created_at|timesince }} ago</small>
+                                </div>
+                            </div>
+
+                            <div class="col-md-3 text-center">
+                                {% if req.status == 'Pending' %}
+                                    <span class="badge bg-warning text-dark"><i class="bi bi-hourglass-split"></i> Pending</span>
+                                {% elif req.status == 'Accepted' %}
+                                    <span class="badge bg-success"><i class="bi bi-check-all"></i> Hired</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ req.status }}</span>
+                                {% endif %}
+                            </div>
+
+                            <div class="col-md-4 text-end">
+                                {% if task.status == 'Open' and req.status == 'Pending' %}
+                                    <div class="btn-group">
+                                        <button class="btn btn-sm btn-success px-3 btn-accept-doer" data-req-id="{{ req.id }}">
+                                            <i class="bi bi-check-lg"></i> Hire Doer
+                                        </button>
+                                        <a href="#" class="btn btn-sm btn-outline-primary px-3">
+                                            <i class="bi bi-chat-dots"></i> Message
+                                        </a>
+                                    </div>
+                                {% elif req.status == 'Accepted' %}
+                                    <span class="text-success fw-bold small">This doer is working on this task.</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% empty %}
+                    <div class="p-5 text-center">
+                        <i class="bi bi-inbox text-muted" style="font-size: 2rem;"></i>
+                        <p class="text-muted mt-2">No active requests for this task yet.</p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="text-center py-5">
+        <i class="bi bi-plus-circle text-muted" style="font-size: 3rem;"></i>
+        <p class="mt-3 text-muted">You haven't posted any tasks yet.</p>
+        <a href="{% url 'post_task' %}" class="btn btn-primary rounded-pill">Post Your First Task</a>
+    </div>
+    {% endfor %}
+</div>
+
+<style>
+    .bg-soft-primary { background-color: #e7f1ff; }
+</style>
+{% endblock %}

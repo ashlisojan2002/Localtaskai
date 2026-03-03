@@ -18,4 +18,5 @@ path('giver/verify/', views.giver_verification, name='giver_verification'),
     path('ajax/load-skills/', views.load_skills, name='ajax_load_skills'),
     path('ajax/load-places/', views.load_places, name='ajax_load_places'),
     path('ajax/load-pincodes/', views.load_pincodes, name='ajax_load_pincodes'),
+    path('manage-requests/', views.view_task_requests, name='manage_requests'),
 ]

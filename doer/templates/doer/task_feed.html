@@ -55,7 +55,16 @@
             <div class="card mb-3 shadow-sm border-start border-primary border-4 task-card" id="task-{{ task.id }}">
                 <div class="card-body">
                     <div class="d-flex justify-content-between align-items-start">
-                        <h5 class="card-title mb-1">{{ task.title }}</h5>
+                        <div>
+                            <h5 class="card-title mb-1">{{ task.title }}</h5>
+                            <p class="small mb-2">
+                                <span class="text-muted">By:</span> 
+                                <span class="fw-bold">{{ task.giver.name }}</span>
+                                {% if task.giver.approval_status == 'Accepted' %}
+                                <i class="bi bi-patch-check-fill text-primary" title="Verified Giver"></i>
+                                {% endif %}
+                            </p>
+                        </div>
                         <span class="fw-bold text-success fs-5">₹{{ task.budget }}</span>
                     </div>
                     <p class="text-muted small mb-2">
@@ -64,7 +73,7 @@
                     </p>
                     <p class="card-text text-secondary">{{ task.description|truncatewords:25 }}</p>
                     <div class="d-flex justify-content-end">
-                        <a href="#" class="btn btn-sm btn-outline-primary px-4">View Details & Accept</a>
+                        <a href="{% url 'task_detail' task.id %}" class="btn btn-sm btn-outline-primary px-4">View Details & Accept</a>
                     </div>
                 </div>
             </div>
@@ -87,27 +96,31 @@
         if (data.type === 'new_task_alert') {
             const task = data.task_data;
             
-            // --- FILTER LOGIC FOR WEBSOCKET ---
             const params = new URLSearchParams(window.location.search);
             const currentDistrict = params.get('district');
             const currentSkill = params.get('skill');
             const currentMinBudget = params.get('min_budget');
 
-            // If a filter is set, check if the incoming live task matches it.
-            // If it doesn't match, we stop the function here (return).
             if (currentDistrict && task.district_id != currentDistrict) return;
             if (currentSkill && task.skill_id != currentSkill) return;
             if (currentMinBudget && parseFloat(task.budget) < parseFloat(currentMinBudget)) return;
             
-            // Create the HTML for the new task card with a 'NEW' badge
+            const blueTick = task.giver_approval_status === 'Accepted' ? '<i class="bi bi-patch-check-fill text-primary"></i>' : '';
+
             const newTaskHtml = `
                 <div class="card mb-3 shadow-sm border-start border-warning border-4 animate__animated animate__fadeInDown" id="task-${task.id}">
                     <div class="card-body">
                         <div class="d-flex justify-content-between align-items-start">
-                            <h5 class="card-title mb-1 text-primary">
-                                ${task.title} 
-                                <span class="badge bg-warning text-dark small ms-2" style="font-size: 0.65rem;">NEW</span>
-                            </h5>
+                            <div>
+                                <h5 class="card-title mb-1 text-primary">
+                                    ${task.title} 
+                                    <span class="badge bg-warning text-dark small ms-2" style="font-size: 0.65rem;">NEW</span>
+                                </h5>
+                                <p class="small mb-2">
+                                    <span class="text-muted">By:</span> 
+                                    <span class="fw-bold">${task.giver_name}</span> ${blueTick}
+                                </p>
+                            </div>
                             <span class="fw-bold text-success fs-5">₹${task.budget}</span>
                         </div>
                         <p class="text-muted small mb-2">
@@ -115,13 +128,12 @@
                         </p>
                         <p class="card-text text-secondary">A new task matching your criteria was just posted!</p>
                         <div class="d-flex justify-content-end">
-                            <a href="/task/${task.id}/" class="btn btn-sm btn-primary px-4">View & Accept</a>
+                            <a href="/task/${task.id}/" class="btn btn-sm btn-primary px-4">View Details & Accept</a>
                         </div>
                     </div>
                 </div>
             `;
             
-            // Insert the new task at the very top of the list
             const container = document.getElementById('task-container');
             container.insertAdjacentHTML('afterbegin', newTaskHtml);
         }
