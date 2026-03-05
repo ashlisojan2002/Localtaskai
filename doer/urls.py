@@ -15,5 +15,10 @@ urlpatterns = [
     path('task/<int:task_id>/cancel/', views.cancel_task_request, name='cancel_task_request'),
     path('my-requests/', views.my_task_requests_view, name='my_requests'),
 
-    path('task/<int:task_id>/chat/', views.chat_with_giver, name='chat_with_giver'), # Add this if missing too
+
+    # Main Messages Inbox
+    path('messages/', views.doer_chat_inbox, name='doer_chat_inbox'),
+    
+    # Specific Chat Selection in Inbox (Changed from task_id to giver_id)
+    path('messages/<int:giver_id>/', views.doer_chat_inbox, name='doer_chat_inbox'),
 ]

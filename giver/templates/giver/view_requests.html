@@ -63,12 +63,17 @@
                                         <button class="btn btn-sm btn-success px-3 btn-accept-doer" data-req-id="{{ req.id }}">
                                             <i class="bi bi-check-lg"></i> Hire Doer
                                         </button>
-                                        <a href="#" class="btn btn-sm btn-outline-primary px-3">
+                                        <a href="{% url 'giver_chat_inbox' req.doer.id %}" class="btn btn-sm btn-outline-primary px-3">
                                             <i class="bi bi-chat-dots"></i> Message
                                         </a>
                                     </div>
                                 {% elif req.status == 'Accepted' %}
-                                    <span class="text-success fw-bold small">This doer is working on this task.</span>
+                                    <div class="d-flex flex-column align-items-end">
+                                        <span class="text-success fw-bold small mb-2">This doer is working on this task.</span>
+                                        <a href="{% url 'giver_chat_inbox' req.doer.id %}" class="btn btn-sm btn-outline-primary px-3">
+                                            <i class="bi bi-chat-dots"></i> Message Hired Doer
+                                        </a>
+                                    </div>
                                 {% endif %}
                             </div>
                         </div>

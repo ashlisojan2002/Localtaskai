@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
-from giver.models import Task  # Importing Task from the giver app
+from giver.models import Task 
+
+
 
 class TaskRequest(models.Model):
     STATUS_CHOICES = [
@@ -27,3 +29,30 @@ class TaskRequest(models.Model):
 
     def __str__(self):
         return f"{self.doer.username} -> {self.task.title} ({self.status})"
+
+
+    
+
+
+
+
+
+
+
+class Message(models.Model):
+    # Keep sender
+    sender = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='sent_messages')
+    
+    # ADD receiver (replacing task)
+    receiver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='received_messages')
+    
+    # Keep your other fields
+    encrypted_content = models.TextField()
+    timestamp = models.DateTimeField(auto_now_add=True)
+    is_seen = models.BooleanField(default=False)
+
+    # REMOVE 'task' if you want a purely direct chat
+    # task = models.ForeignKey('giver.Task', on_delete=models.CASCADE, null=True, blank=True)
+
+    def __str__(self):
+        return f"From {self.sender.username} to {self.receiver.username}"

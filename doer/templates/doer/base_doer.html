@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block page_title %}Doer Hub{% endblock %}</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
@@ -23,7 +24,7 @@
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        /* --- EMERALD DOER NAVIGATION --- */
+        /* --- NAVIGATION STYLES --- */
         .doer-nav {
             background: #ffffff;
             border-bottom: 2px solid var(--emerald-accent);
@@ -40,10 +41,14 @@
 
         .nav-links {
             display: flex;
-            gap: 2rem;
+            gap: 1.5rem;
             list-style: none;
             margin: 0;
             padding: 0;
+            height: 100%;
+        }
+
+        .nav-links li {
             height: 100%;
         }
 
@@ -54,9 +59,10 @@
             font-size: 0.95rem;
             display: flex;
             align-items: center;
-            height: 70px;
+            height: 100%;
             position: relative;
             transition: 0.3s;
+            padding: 0 5px;
         }
 
         .nav-links a:hover { color: var(--emerald-accent); }
@@ -76,7 +82,7 @@
             border-radius: 4px 4px 0 0;
         }
 
-        /* --- DOER STATUS SECTION --- */
+        /* --- STATUS & ACTIONS --- */
         .doer-status-box {
             display: flex;
             align-items: center;
@@ -106,9 +112,10 @@
 
         .main-wrapper {
             flex: 1;
-            padding: 2.5rem 0;
+            padding: 0; /* Changed from 2.5rem to 0 to remove space */
         }
 
+        /* --- FOOTER --- */
         footer {
             background: var(--forest-base);
             color: #ffffff;
@@ -144,6 +151,11 @@
                     </a>
                 </li>
                 <li>
+                    <a href="{% url 'doer_chat_inbox' %}" class="{% if 'messages' in request.path %}active-link{% endif %}">
+                        <i class="bi bi-chat-dots me-2"></i> Messages
+                    </a>
+                </li>
+                <li>
                     <a href="{% url 'doer_profile_view' %}" class="{% if request.resolver_match.url_name == 'doer_profile_view' %}active-link{% endif %}">
                         Profile
                     </a>
@@ -175,11 +187,8 @@
     </nav>
 
     <main class="main-wrapper">
-        <div class="container">
-            <div class="mb-4">
-                <h2 class="fw-bold text-dark">{% block content_title %}{% endblock %}</h2>
-                <hr style="width: 50px; height: 3px; background: var(--emerald-accent); border: none; opacity: 1;">
-            </div>
+        <div class="container-fluid p-0"> <div class="mb-0"> <h2 class="fw-bold text-dark">{% block content_title %}{% endblock %}</h2>
+                </div>
 
             {% block content %}{% endblock %}
         </div>

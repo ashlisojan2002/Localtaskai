@@ -11,6 +11,15 @@ from django.shortcuts import render
 from giver.models import Task  # Import Task from the giver app
 from adminpanel.models import District, Category, Skill # Import these from adminpanel
 from .models import TaskRequest
+from .models import Message
+from .utils import decrypt_message
+from django.contrib.auth import get_user_model
+from django.utils import timezone
+from datetime import timedelta
+
+User = get_user_model()
+from django.db.models import Q
+
 
 @login_required
 def doer_profile_view(request):
@@ -257,16 +266,7 @@ def cancel_task_request(request, task_id):
 
 
 
-@login_required
-def chat_with_giver(request, task_id):
-    """
-    Placeholder for the chat system.
-    We will build the actual messaging logic later.
-    """
-    task = get_object_or_404(Task, id=task_id)
-    # For now, just show a simple message or redirect back
-    # We'll replace this with a real chat template soon!
-    return render(request, 'doer/chat_placeholder.html', {'task': task})
+
 
 @login_required
 def my_task_requests_view(request):
@@ -277,4 +277,63 @@ def my_task_requests_view(request):
 
     return render(request, 'doer/my_requests.html', {
         'my_requests': my_requests
+    })
+
+@login_required
+def doer_chat_inbox(request, giver_id=None):
+    # 1. Sidebar Logic: Filter unique givers and check approval status
+    applications = TaskRequest.objects.filter(doer=request.user).select_related('task', 'task__giver')
+    
+    unique_givers = []
+    seen_giver_ids = set()
+    for app in applications:
+        if app.task.giver.id not in seen_giver_ids:
+            # Check if ANY task from this giver has been accepted
+            app.is_accepted = applications.filter(task__giver=app.task.giver, status="accepted").exists()
+            unique_givers.append(app)
+            seen_giver_ids.add(app.task.giver.id)
+
+    other_user = None
+    chat_history = []
+    room_id = ""
+    active_app_accepted = False
+    
+    # 2. Process active chat
+    if giver_id:
+        other_user = get_object_or_404(User, id=giver_id)
+        user_ids = sorted([request.user.id, other_user.id])
+        room_id = f"{user_ids[0]}_{user_ids[1]}"
+        
+        # Check if the currently selected giver has accepted the doer
+        active_app_accepted = applications.filter(task__giver=other_user, status="accepted").exists()
+        
+        raw_messages = Message.objects.filter(
+            (Q(sender=request.user) & Q(receiver=other_user)) | 
+            (Q(sender=other_user) & Q(receiver=request.user))
+        ).order_by('timestamp')
+        
+        for msg in raw_messages:
+            try:
+                # IMPORTANT: Decryption logic remains untouched
+                encrypted_data = msg.encrypted_content
+                if isinstance(encrypted_data, str):
+                    encrypted_data = encrypted_data.encode()
+                content = decrypt_message(encrypted_data)
+            except Exception:
+                content = "[Encrypted Message]"
+            
+            chat_history.append({
+                'sender': msg.sender.name, 
+                'content': content,
+                'is_seen': msg.is_seen, # Message seen status logic preserved
+                'timestamp': msg.timestamp
+            })
+
+    # "Active Now" threshold logic removed as requested
+    return render(request, 'doer/chat_inbox.html', {
+        'applications': unique_givers, 
+        'other_user': other_user,
+        'chat_history': chat_history,
+        'room_id': room_id,
+        'active_app_accepted': active_app_accepted,
     })

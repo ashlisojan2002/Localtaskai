@@ -106,7 +106,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Asia/Kolkata'
 
 USE_I18N = True
 
@@ -134,3 +134,6 @@ CHANNEL_LAYERS = {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
     },
 }
+
+# Generate one using: from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
+CHAT_ENCRYPTION_KEY = b'sW8HQktYOjEaGHu4QR_Z1maJVIdu3ATTX6sSoS0Zi9E='

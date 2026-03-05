@@ -99,7 +99,7 @@
         /* --- MAIN CONTENT --- */
         .main-wrapper {
             flex: 1;
-            padding: 2.5rem 0;
+            padding: 0; 
         }
 
         /* --- FOOTER --- */
@@ -122,28 +122,13 @@
     <nav class="giver-nav sticky-top">
         <div class="container nav-container">
             <ul class="nav-links-list">
-                <li>
-                    <a href="{% url 'giver_home' %}" class="{% if request.resolver_match.url_name == 'giver_home' %}active-link{% endif %}">
-                        Overview
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'my_tasks' %}" class="{% if request.resolver_match.url_name == 'my_tasks' %}active-link{% endif %}">
-                        My Postings
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'manage_requests' %}" class="{% if request.resolver_match.url_name == 'manage_requests' %}active-link{% endif %}">
-                        Manage Requests
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'post_task' %}" class="{% if request.resolver_match.url_name == 'post_task' %}active-link{% endif %}">
-                        <i class="bi bi-plus-circle me-1"></i> Post Task
-                    </a>
-                </li>
+                <li><a href="{% url 'giver_home' %}" class="{% if request.resolver_match.url_name == 'giver_home' %}active-link{% endif %}">Overview</a></li>
+                <li><a href="{% url 'my_tasks' %}" class="{% if request.resolver_match.url_name == 'my_tasks' %}active-link{% endif %}">My Postings</a></li>
+                <li><a href="{% url 'manage_requests' %}" class="{% if request.resolver_match.url_name == 'manage_requests' %}active-link{% endif %}">Manage Requests</a></li>
+                <li><a href="{% url 'post_task' %}" class="{% if request.resolver_match.url_name == 'post_task' %}active-link{% endif %}"><i class="bi bi-plus-circle me-1"></i> Post Task</a></li>
                 <li><a href="{% url 'giver_profile_view' %}" class="{% if request.resolver_match.url_name == 'giver_profile_view' %}active-link{% endif %}">Profile</a></li>
                 <li><a href="{% url 'giver_verification' %}" class="{% if request.resolver_match.url_name == 'giver_verification' %}active-link{% endif %}">Verification</a></li>
+                <li><a href="{% url 'giver_chat_inbox' %}" class="{% if request.resolver_match.url_name == 'giver_chat_inbox' %}active-link{% endif %}">Messages</a></li>
             </ul>
 
             <div class="user-status-box">
@@ -151,23 +136,14 @@
                     <div class="fw-bold text-dark small" style="line-height: 1;">{{ user.username }}</div>
                     <span class="text-muted" style="font-size: 0.7rem;">Task Giver</span>
                 </div>
-
                 <div class="vr mx-2 text-secondary opacity-25" style="height: 30px;"></div>
-
-                <a href="{% url 'logout_user' %}" class="btn-logout">
-                    <i class="bi bi-box-arrow-right"></i> Logout
-                </a>
+                <a href="{% url 'logout_user' %}" class="btn-logout"><i class="bi bi-box-arrow-right"></i> Logout</a>
             </div>
         </div>
     </nav>
 
     <main class="main-wrapper">
-        <div class="container">
-            <div class="mb-4">
-                <h2 class="fw-bold text-dark">{% block content_title %}Giver Dashboard{% endblock %}</h2>
-                <hr style="width: 50px; height: 3px; background: var(--emerald-accent); border: none; opacity: 1;">
-            </div>
-
+        <div class="container-fluid p-0"> 
             {% block content %}{% endblock %}
         </div>
     </main>
@@ -180,5 +156,31 @@
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        // Connect to a personal notification channel so updates work on every page
+        const globalWsScheme = window.location.protocol === "https:" ? "wss" : "ws";
+        // We reuse the ChatConsumer logic but listen specifically for global_unread_update
+        // Note: Make sure your routing.py allows this connection
+        const globalSocket = new WebSocket(`${globalWsScheme}://${window.location.host}/ws/chat/global_updates/`);
+
+        globalSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            
+            // If a notification comes in for an unread message
+            if (data.type === 'global_unread_update') {
+                const badge = document.getElementById(`unread-badge-${data.sender_id}`);
+                if (badge) {
+                    let currentCount = parseInt(badge.innerText.trim()) || 0;
+                    badge.innerText = currentCount + 1;
+                    badge.classList.remove('d-none'); // Reveal the badge instantly
+                }
+            }
+        };
+
+        globalSocket.onclose = function(e) {
+            console.warn('Global Notification Socket closed unexpectedly');
+        };
+    </script>
 </body>
 </html>

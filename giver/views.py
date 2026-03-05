@@ -14,6 +14,14 @@ from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
 from django.utils import timezone
 from datetime import datetime
+from django.db.models import Q
+from doer.models import TaskRequest, Message 
+from doer.utils import decrypt_message
+from django.db.models import Q
+from accounts.models import User
+
+
+
 
 @login_required
 def giver_profile_view(request):
@@ -237,4 +245,88 @@ def view_task_requests(request):
 
     return render(request, 'giver/view_requests.html', {
         'my_tasks': my_tasks
+    })
+
+
+
+
+@login_required
+def giver_chat_inbox(request, doer_id=None):
+    # 1. Base Query for the Sidebar
+    my_tasks_applications = TaskRequest.objects.filter(
+        task__giver=request.user
+    ).select_related('doer', 'task')
+
+    # 2. MARK AS READ: If a user is selected, clear their unread messages FIRST
+    # This ensures the badge disappears immediately upon page load for that specific user
+    if doer_id:
+        Message.objects.filter(
+            sender_id=doer_id, 
+            receiver=request.user, 
+            is_seen=False
+        ).update(is_seen=True)
+
+    # 3. UNIQUE DOERS LOGIC: Process the sidebar list
+    unique_doers = []
+    seen_doer_ids = set()
+    
+    for app in my_tasks_applications:
+        if app.doer.id not in seen_doer_ids:
+            # Check if accepted status exists for this doer
+            app.is_accepted = my_tasks_applications.filter(doer=app.doer, status="accepted").exists()
+            
+            # CALCULATE UNREAD COUNT: This provides the number for the professional badge
+            # We count only messages sent TO you that are still marked as unseen
+            app.unread_count = Message.objects.filter(
+                sender=app.doer,
+                receiver=request.user,
+                is_seen=False
+            ).count()
+            
+            unique_doers.append(app)
+            seen_doer_ids.add(app.doer.id)
+
+    # 4. ACTIVE CHAT LOGIC
+    other_user = None
+    chat_history = []
+    room_id = ""
+    active_app_accepted = False
+
+    if doer_id:
+        other_user = get_object_or_404(User, id=doer_id)
+        # Sort IDs to ensure the room name is consistent (e.g., 1_5 is the same as 5_1)
+        user_ids = sorted([request.user.id, other_user.id])
+        room_id = f"{user_ids[0]}_{user_ids[1]}"
+        
+        active_app_accepted = my_tasks_applications.filter(doer=other_user, status="accepted").exists()
+
+        # Fetch message history
+        raw_messages = Message.objects.filter(
+            (Q(sender=request.user) & Q(receiver=other_user)) | 
+            (Q(sender=other_user) & Q(receiver=request.user))
+        ).order_by('timestamp')
+
+        for msg in raw_messages:
+            try:
+                encrypted_data = msg.encrypted_content
+                if isinstance(encrypted_data, str):
+                    encrypted_data = encrypted_data.encode()
+                content = decrypt_message(encrypted_data)
+            except Exception:
+                content = "[Encrypted Message]"
+            
+            chat_history.append({
+                'sender_name': msg.sender.name,
+                'content': content,
+                'is_seen': msg.is_seen,
+                'timestamp': msg.timestamp
+            })
+
+    # 5. RENDER
+    return render(request, 'giver/giver_messages.html', {
+        'applications': unique_doers,
+        'other_user': other_user,
+        'chat_history': chat_history,
+        'room_id': room_id,
+        'active_app_accepted': active_app_accepted
     })
