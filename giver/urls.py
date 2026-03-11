@@ -22,4 +22,10 @@ path('giver/verify/', views.giver_verification, name='giver_verification'),
 
 path('giver-messages/', views.giver_chat_inbox, name='giver_chat_inbox'),
     path('giver-messages/<int:doer_id>/', views.giver_chat_inbox, name='giver_chat_inbox'),
+    path('hire-doer-ajax/', views.hire_doer_ajax, name='hire_doer_ajax'),
+    path('giver/hired-tasks/', views.giver_hired_tasks, name='giver_hired_tasks'),
+
+    # 2. The AJAX Action to Close Task and Save Review
+    path('giver/complete-and-rate/', views.giver_complete_and_rate, name='giver_complete_and_rate'),
+    
 ]

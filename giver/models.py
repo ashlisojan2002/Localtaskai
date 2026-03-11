@@ -4,6 +4,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime # Added this
 from adminpanel.models import District, Place, Pincode, Category, Skill
 
+
 class Task(models.Model):
     STATUS_CHOICES = [
         ('Open', 'Open'),
@@ -60,3 +61,25 @@ class Task(models.Model):
 
     def __str__(self):
         return f"{self.title} - {self.status}"
+    
+
+
+class Review(models.Model):
+    task = models.ForeignKey('Task', on_delete=models.CASCADE, related_name='reviews')
+    reviewer = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_given')
+    reviewee = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_received')
+    
+    rating = models.IntegerField()
+    comment = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        # This ensures one reviewer can only give one review per task.
+        # If the task ID is different, they can rate again.
+        unique_together = ('task', 'reviewer')
+
+    def __str__(self):
+        # Added a check for name to prevent errors if name is empty
+        reviewer_name = getattr(self.reviewer, 'name', self.reviewer.email)
+        reviewee_name = getattr(self.reviewee, 'name', self.reviewee.email)
+        return f"Review from {reviewer_name} to {reviewee_name} for {self.task.title}"

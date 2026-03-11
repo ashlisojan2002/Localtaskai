@@ -137,3 +137,10 @@ CHANNEL_LAYERS = {
 
 # Generate one using: from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())
 CHAT_ENCRYPTION_KEY = b'sW8HQktYOjEaGHu4QR_Z1maJVIdu3ATTX6sSoS0Zi9E='
+
+import os
+
+STATIC_URL = '/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]

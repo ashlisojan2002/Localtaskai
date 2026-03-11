@@ -13,10 +13,10 @@
             <div class="card shadow-sm border-0 rounded-4 p-4">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div>
-                        <span class="badge bg-soft-primary text-primary border border-primary mb-2 px-3 py-2">
+                        <span class="badge bg-soft-emerald text-emerald-accent border border-emerald-accent mb-2 px-3 py-2">
                             Category: {{ task.category.name }}
                         </span>
-                        <h1 class="fw-bold display-6">Title: {{ task.title }}</h1>
+                        <h1 class="fw-bold display-6">{{ task.title }}</h1>
                     </div>
                     <div class="text-end">
                         <div class="text-muted small">Budget</div>
@@ -26,30 +26,30 @@
 
                 <hr class="opacity-10">
 
-                <h5 class="fw-bold mb-3 mt-2"><i class="bi bi-text-left me-2 text-primary"></i>Task Description</h5>
+                <h5 class="fw-bold mb-3 mt-2"><i class="bi bi-text-left me-2 text-emerald-accent"></i>Task Description</h5>
                 <p class="text-secondary fs-5" style="white-space: pre-wrap;">{{ task.description }}</p>
 
                 <div class="row mt-4 g-3">
                     <div class="col-md-6">
                         <div class="p-3 border rounded-3 bg-light">
                             <small class="text-muted d-block mb-1">Specific Skill Needed</small>
-                            <span class="fw-bold text-dark"><i class="bi bi-tools me-2"></i>{{ task.skill.skill_name }}</span>
+                            <span class="fw-bold text-dark"><i class="bi bi-tools me-2 text-emerald-accent"></i>{{ task.skill.skill_name }}</span>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="p-3 border rounded-3 bg-light">
-                            <small class="text-muted d-block mb-1">Status</small>
-                            <span class="badge {% if task.status == 'Open' %}bg-success{% else %}bg-secondary{% endif %} px-3">
+                            <small class="text-muted d-block mb-1">Global Status</small>
+                            <span class="badge {% if task.status == 'Open' %}bg-success{% elif task.status == 'Accepted' %}bg-primary{% else %}bg-secondary{% endif %} px-3">
                                 {{ task.status }}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                <h5 class="fw-bold mb-3 mt-5"><i class="bi bi-info-circle me-2 text-primary"></i>Location & Deadline</h5>
-                <div class="position-relative ps-4 border-start border-2 border-primary ms-2">
+                <h5 class="fw-bold mb-3 mt-5"><i class="bi bi-info-circle me-2 text-emerald-accent"></i>Location & Deadline</h5>
+                <div class="position-relative ps-4 border-start border-2 border-emerald-accent ms-2">
                     <div class="mb-4 position-relative">
-                        <a href="https://www.google.com/maps/search/?api=1&query={{ task.place.place_name }}+{{ task.district.district_name }}+{{ task.pincode.pincode }}" 
+                        <a href="https://www.google.com/maps/search/?api=1&query={{ task.place.place_name }}+{{ task.district.district_name }}" 
                            target="_blank" class="text-decoration-none">
                             <div class="map-icon-container position-absolute start-0 translate-middle bg-white shadow" style="left: -26px !important;">
                                 <i class="bi bi-geo-alt-fill text-danger"></i>
@@ -59,45 +59,41 @@
                         
                         <div class="d-flex justify-content-between align-items-center">
                             <h6 class="fw-bold mb-0">Location</h6>
-                            <a href="https://www.google.com/maps/search/?api=1&query={{ task.place.place_name }}+{{ task.district.district_name }}+{{ task.pincode.pincode }}" 
+                            <a href="https://www.google.com/maps/search/?api=1&query={{ task.place.place_name }}+{{ task.district.district_name }}" 
                                target="_blank" class="btn btn-sm btn-danger rounded-pill px-3" style="font-size: 0.75rem;">
                                 <i class="bi bi-map-fill me-1"></i> Open Google Maps
                             </a>
                         </div>
-                        <p class="text-dark fw-medium mb-0 mt-1">
-                            {{ task.place.place_name }}, {{ task.district.district_name }}
-                        </p>
-                        <p class="text-muted small mb-0">
-                            Pincode: <span class="badge bg-light text-dark border">{% if task.pincode.pincode %}{{ task.pincode.pincode }}{% else %}{{ task.pincode }}{% endif %}</span>
-                        </p>
+                        <p class="text-dark fw-medium mb-0 mt-1">{{ task.place.place_name }}, {{ task.district.district_name }}</p>
+                        <p class="text-muted small mb-0">Pincode: {{ task.pincode.pincode }}</p>
                     </div>
                     
                     <div class="position-relative">
-                        <i class="bi bi-clock-history text-primary position-absolute start-0 translate-middle bg-white" style="left: -26px !important;"></i>
+                        <i class="bi bi-clock-history text-emerald-accent position-absolute start-0 translate-middle bg-white p-1" style="left: -26px !important;"></i>
                         <h6 class="fw-bold mb-0">Deadline</h6>
                         <p class="text-muted mb-0">{{ task.deadline_datetime|date:"D, M d, Y" }} at {{ task.deadline_datetime|time:"h:i A" }}</p>
-                        <small class="text-warning fst-italic"><i class="bi bi-exclamation-triangle tiny"></i> Task expires after this time.</small>
+                        <small class="text-warning fst-italic"><i class="bi bi-exclamation-triangle"></i> Task expires after this time.</small>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="col-lg-4">
-            <div class="card shadow-sm border-0 rounded-4 p-4 text-center sticky-top" style="top: 20px;">
-                <h6 class="text-muted small text-uppercase mb-4">Posted By</h6>
+            <div class="card shadow-sm border-0 rounded-4 p-4 text-center sticky-top" style="top: 100px;">
+                <h6 class="text-muted small text-uppercase mb-4">Giver Profile</h6>
                 
                 <div class="position-relative d-inline-block mb-3">
                     {% if task.giver.photo %}
                         <img src="{{ task.giver.photo.url }}" class="rounded-circle border p-1 shadow-sm" width="100" height="100" style="object-fit: cover;">
                     {% else %}
-                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 100px; height: 100px; font-size: 2.5rem;">
+                        <div class="rounded-circle bg-forest text-white d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 100px; height: 100px; font-size: 2.5rem;">
                             {{ task.giver.name|slice:":1" }}
                         </div>
                     {% endif %}
                     
                     {% if task.giver.approval_status == 'Accepted' %}
                         <span class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow-sm">
-                            <i class="bi bi-patch-check-fill text-primary" style="font-size: 1.5rem;" title="Verified Giver"></i>
+                            <i class="bi bi-patch-check-fill text-primary" style="font-size: 1.5rem;"></i>
                         </span>
                     {% endif %}
                 </div>
@@ -105,40 +101,89 @@
                 <h5 class="fw-bold mb-1">{{ task.giver.name }}</h5>
                 <p class="text-muted small mb-4">Member since {{ task.giver.date_joined|date:"M Y" }}</p>
 
-                <div class="d-grid gap-2">
-                    {% if user_has_requested %}
-                        <form action="{% url 'cancel_task_request' task.id %}" method="POST">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-danger btn-lg w-100 fw-bold py-3 shadow-sm rounded-3">
-                                <i class="bi bi-x-circle me-2"></i>Cancel My Request
-                            </button>
-                        </form>
-                    {% else %}
-                        <form action="{% url 'request_task' task.id %}" method="POST">
-                            {% csrf_token %}
-                            <button type="submit" class="btn btn-warning btn-lg w-100 fw-bold py-3 shadow-sm rounded-3">
-                                <i class="bi bi-hand-index-thumb me-2"></i>Send Request
-                            </button>
-                        </form>
-                    {% endif %}
+                <hr class="my-4 opacity-10">
 
-                   <a href="{% url 'doer_chat_inbox' giver_id=task.giver.id %}" class="btn btn-primary">
-    Message Giver
+                <div class="d-grid gap-2">
+                    {% if task.status == 'Completed' %}
+                        <div class="alert alert-secondary border-0 py-3 rounded-3 mb-0">
+                            <i class="bi bi-lock-fill me-2"></i>Task Completed
+                        </div>
+
+                    {% elif task.status == 'Accepted' %}
+                        {% if is_hired_doer %}
+                            <div class="alert alert-success border-0 fw-bold py-3 rounded-3 mb-2 animate__animated animate__pulse">
+                                <i class="bi bi-award-fill me-2"></i>You've been Hired!
+                            </div>
+                            <a href="{% url 'doer_chat_inbox' giver_id=task.giver.id %}" class="btn btn-emerald btn-lg w-100 fw-bold py-3 rounded-3 shadow">
+                                <i class="bi bi-chat-dots-fill me-2"></i>Open Chat
+                            </a>
+                        {% else %}
+                            <div class="alert alert-warning border-0 py-3 rounded-3 mb-0">
+                                <i class="bi bi-people-fill me-2"></i>Already Assigned
+                            </div>
+                        {% endif %}
+
+                    {% else %}
+                        {% if user_has_requested %}
+                            <form action="{% url 'cancel_task_request' task.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-outline-danger btn-lg w-100 fw-bold py-3 rounded-3">
+                                    <i class="bi bi-x-circle me-2"></i>Cancel Request
+                                </button>
+                            </form>
+                        {% else %}
+                            <form action="{% url 'request_task' task.id %}" method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-emerald btn-lg w-100 fw-bold py-3 rounded-3 shadow">
+                                    <i class="bi bi-send-fill me-2"></i>Send Request
+                                </button>
+                            </form>
+                        {% endif %}
+
+                        <a href="{% url 'doer_chat_inbox' giver_id=task.giver.id %}" 
+   style="display: inline-flex; 
+          align-items: center; 
+          justify-content: center; 
+          background-color: #ecfdf5; 
+          color: #064e3b; 
+          border: 1px solid #10b981; 
+          padding: 10px 24px; 
+          border-radius: 50px; 
+          font-weight: 700; 
+          font-size: 0.85rem; 
+          letter-spacing: 0.5px; 
+          text-decoration: none; 
+          transition: all 0.3s ease; 
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);"
+   onmouseover="this.style.backgroundColor='#10b981'; this.style.color='#ffffff'; this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(16, 185, 129, 0.3)';"
+   onmouseout="this.style.backgroundColor='#ecfdf5'; this.style.color='#064e3b'; this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';"
+   class="mt-3">
+    <i class="bi bi-chat-dots-fill" style="margin-right: 8px; font-size: 1.1rem;"></i>
+    MESSAGE GIVER
 </a>
+                    {% endif %}
                 </div>
                 
-                <p class="mt-4 text-muted tiny">
-                    <i class="bi bi-shield-lock me-1"></i> Your safety is important. Never share personal bank details in chat.
-                </p>
+                <div class="mt-4 p-3 bg-light rounded-3">
+                    <p class="text-muted tiny mb-0 text-start">
+                        <i class="bi bi-shield-check text-success me-1"></i>
+                        Secure payments upon completion. Your safety is our priority.
+                    </p>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <style>
-    .bg-soft-primary { background-color: #e7f1ff; }
+    .bg-soft-emerald { background-color: #ecfdf5; }
+    .text-emerald-accent { color: #10b981; }
+    .bg-forest { background-color: #064e3b; }
+    .btn-emerald { background-color: #10b981; color: white; border: none; }
+    .btn-emerald:hover { background-color: #059669; color: white; transform: translateY(-2px); transition: 0.2s; }
     .tiny { font-size: 0.75rem; }
 
+    /* Map Pulsate Animation */
     .map-icon-container {
         width: 32px;
         height: 32px;
@@ -147,14 +192,14 @@
         justify-content: center;
         border-radius: 50%;
         z-index: 2;
-        border: 2px solid #dc3545;
+        border: 2px solid #ef4444;
     }
 
     .pulse-ring {
         content: '';
         width: 32px;
         height: 32px;
-        border: 4px solid #dc3545;
+        border: 4px solid #ef4444;
         border-radius: 50%;
         position: absolute;
         animation: pulsate 2s infinite ease-out;
@@ -164,12 +209,6 @@
         0% { transform: scale(0.6, 0.6); opacity: 0.0; }
         50% { opacity: 1.0; }
         100% { transform: scale(1.4, 1.4); opacity: 0.0; }
-    }
-
-    .map-icon-container:hover {
-        transform: scale(1.1);
-        transition: 0.2s;
-        background-color: #fff1f2 !important;
     }
 </style>
 {% endblock %}

@@ -100,4 +100,44 @@
 <style>
     .bg-soft-primary { background-color: #e7f1ff; }
 </style>
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.querySelectorAll('.btn-accept-doer').forEach(button => {
+        button.addEventListener('click', function() {
+            const reqId = this.getAttribute('data-req-id');
+
+            Swal.fire({
+                title: 'Confirm Hire',
+                text: "Are you sure you want to hire this doer? This task will be assigned to them.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#198754',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Hire!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch("{% url 'hire_doer_ajax' %}", {
+                        method: "POST",
+                        headers: {
+                            "X-CSRFToken": "{{ csrf_token }}",
+                            "Content-Type": "application/x-www-form-urlencoded",
+                        },
+                        body: `req_id=${reqId}`
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            Swal.fire('Success!', data.message, 'success').then(() => {
+                                location.reload(); // Refresh to update badges and status
+                            });
+                        } else {
+                            Swal.fire('Error', data.message, 'error');
+                        }
+                    });
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

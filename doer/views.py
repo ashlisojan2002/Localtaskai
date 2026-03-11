@@ -8,7 +8,7 @@ import re
 from django.core.files.base import ContentFile
 import base64
 from django.shortcuts import render
-from giver.models import Task  # Import Task from the giver app
+from giver.models import Task,Review  # Import Task from the giver app
 from adminpanel.models import District, Category, Skill # Import these from adminpanel
 from .models import TaskRequest
 from .models import Message
@@ -16,6 +16,7 @@ from .utils import decrypt_message
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
+from django.http import JsonResponse
 
 User = get_user_model()
 from django.db.models import Q
@@ -199,18 +200,20 @@ def doer_task_feed(request):
 
 
 
-
 @login_required
 def task_detail_view(request, task_id):
-    # 1. Fetch the task with all related data
     task = get_object_or_404(
         Task.objects.select_related('district', 'place', 'pincode', 'giver', 'category', 'skill'), 
         id=task_id
     )
     
-    # 2. Check if the current user (Doer) has already requested this task
-    # We look for 'Pending' or 'Accepted' statuses. 
-    # If the status is 'Cancelled', they should be able to request it again.
+    # Fetch the specific request for this user if it exists
+    user_request = TaskRequest.objects.filter(task=task, doer=request.user).first()
+    
+    # Check if this specific user is the one hired
+    is_hired_doer = (task.doer == request.user)
+    
+    # For the button toggle (Pending/Accepted)
     user_has_requested = TaskRequest.objects.filter(
         task=task, 
         doer=request.user
@@ -218,7 +221,9 @@ def task_detail_view(request, task_id):
     
     return render(request, 'doer/task_detail.html', {
         'task': task,
-        'user_has_requested': user_has_requested # This is the key for the button toggle
+        'user_has_requested': user_has_requested,
+        'is_hired_doer': is_hired_doer,
+        'user_request': user_request
     })
 
 
@@ -270,14 +275,24 @@ def cancel_task_request(request, task_id):
 
 @login_required
 def my_task_requests_view(request):
-    # Fetch all requests made by this Doer, ordered by the most recent first
-    my_requests = TaskRequest.objects.filter(doer=request.user).select_related(
+    # Fetch all requests made by this Doer
+    # We EXCLUDE tasks where the main Task status is 'Completed'
+    my_requests = TaskRequest.objects.filter(
+        doer=request.user
+    ).exclude(
+        task__status='Completed'
+    ).select_related(
         'task', 'task__giver', 'task__district', 'task__place'
     ).order_by('-created_at')
 
     return render(request, 'doer/my_requests.html', {
         'my_requests': my_requests
     })
+
+
+
+
+
 
 @login_required
 def doer_chat_inbox(request, giver_id=None):
@@ -314,6 +329,7 @@ def doer_chat_inbox(request, giver_id=None):
         
         for msg in raw_messages:
             try:
+                
                 # IMPORTANT: Decryption logic remains untouched
                 encrypted_data = msg.encrypted_content
                 if isinstance(encrypted_data, str):
@@ -336,4 +352,72 @@ def doer_chat_inbox(request, giver_id=None):
         'chat_history': chat_history,
         'room_id': room_id,
         'active_app_accepted': active_app_accepted,
+    })
+
+
+
+@login_required
+def doer_hired_jobs(request):
+    # Get IDs of tasks the Doer has already rated
+    rated_tasks = Review.objects.filter(reviewer=request.user).values_list('task_id', flat=True)
+
+    # Filter tasks: In progress or Completed, BUT NOT yet rated by the Doer
+    hired_tasks = Task.objects.filter(
+        doer=request.user, 
+        status__in=['Accepted', 'Completed']
+    ).exclude(id__in=rated_tasks).select_related('giver', 'category').order_by('deadline_datetime')
+    
+    return render(request, 'doer/hired_jobs.html', {
+        'hired_tasks': hired_tasks
+    })
+
+@login_required
+def doer_rate_giver(request):
+    if request.method == "POST":
+        task_id = request.POST.get('task_id')
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment')
+
+        # This will show up in your CMD/Terminal to confirm the data arrived
+        print(f"--- RATING DATA RECEIVED: Task {task_id}, Rating {rating} ---")
+
+        # Use status='Completed' because Doer can only rate AFTER Giver approves
+        task = get_object_or_404(Task, id=task_id, doer=request.user, status='Completed')
+
+        if Review.objects.filter(task=task, reviewer=request.user).exists():
+            return JsonResponse({'status': 'error', 'message': 'Review already submitted.'})
+
+        Review.objects.create(
+            task=task,
+            reviewer=request.user,
+            reviewee=task.giver,
+            rating=int(rating),
+            comment=comment
+        )
+        return JsonResponse({'status': 'success', 'message': 'Giver rated successfully!'})
+
+@login_required
+def submit_task_for_approval(request):
+    if request.method == "POST":
+        task_id = request.POST.get('task_id')
+        # Ensure the Doer is the one hired for this task
+        task = get_object_or_404(Task, id=task_id, doer=request.user)
+        
+        # We update the TaskRequest status so the Giver sees the 'Review' option
+        TaskRequest.objects.filter(task=task, doer=request.user).update(status='Completed')
+        
+        return JsonResponse({'status': 'success', 'message': 'Work submitted for review!'})
+    
+
+@login_required
+def doer_completed_history(request):
+    # Fetch tasks where the Doer has already submitted a review
+    # We use the related_name 'reviews_given' from the Review model
+    completed_tasks = Task.objects.filter(
+        doer=request.user,
+        reviews__reviewer=request.user
+    ).select_related('giver', 'category').distinct().order_by('-created_at')
+    
+    return render(request, 'doer/completed_history.html', {
+        'completed_tasks': completed_tasks
     })

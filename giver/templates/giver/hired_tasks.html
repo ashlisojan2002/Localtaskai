@@ -1,0 +1,172 @@
+{% extends 'giver/base_giver.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold mb-0"><i class="bi bi-person-check-fill text-primary me-2"></i>My Hired Tasks</h3>
+        <p class="text-muted mb-0">Manage active contracts and approve finished work.</p>
+    </div>
+
+    <div class="row">
+        {% for task in hired_tasks %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="card shadow-sm border-0 rounded-4 overflow-hidden h-100">
+                <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center border-bottom-0">
+                    <span class="badge bg-soft-primary text-primary px-3">{{ task.category.name }}</span>
+                    <span class="badge {% if task.status == 'Accepted' %}bg-warning text-dark{% else %}bg-success{% endif %} rounded-pill">
+                        {{ task.status }}
+                    </span>
+                </div>
+
+                <div class="card-body pt-0">
+                    <h5 class="fw-bold mb-3">{{ task.title }}</h5>
+                    
+                    <div class="d-flex align-items-center p-2 bg-light rounded-3 mb-3">
+                        {% if task.doer.photo %}
+                            <img src="{{ task.doer.photo.url }}" class="rounded-circle border me-2" width="45" height="45" style="object-fit: cover;">
+                        {% else %}
+                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 45px; height: 45px;">
+                                {{ task.doer.name|slice:":1" }}
+                            </div>
+                        {% endif %}
+                        <div>
+                            <small class="text-muted d-block" style="font-size: 0.7rem;">HIRED DOER</small>
+                            <span class="fw-bold">{{ task.doer.name }}</span>
+                            {% if task.doer.approval_status == 'Accepted' %}
+                                <i class="bi bi-patch-check-fill text-primary small"></i>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-4 text-center">
+                        <div class="col-6 border-end">
+                            <small class="text-muted d-block">Budget</small>
+                            <span class="fw-bold">₹{{ task.budget }}</span>
+                        </div>
+                        <div class="col-6">
+                            <small class="text-muted d-block">Deadline</small>
+                            <span class="fw-bold {% if task.is_overdue %}text-danger{% endif %}">
+                                {{ task.deadline_datetime|date:"M d" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'giver_chat_inbox' task.doer.id %}" class="btn btn-outline-primary rounded-pill">
+                            <i class="bi bi-chat-dots"></i> Message Doer
+                        </a>
+
+                        {% for req in task.task_requests.all %}
+                            {% if req.doer == task.doer and req.status == 'Completed' and task.status == 'Accepted' %}
+                                <button class="btn btn-success rounded-pill animate__animated animate__pulse animate__infinite" 
+                                        data-bs-toggle="modal" data-bs-target="#rateModal{{ task.id }}">
+                                    <i class="bi bi-star-fill"></i> Approve & Rate
+                                </button>
+                            {% endif %}
+                        {% endfor %}
+
+                        {% if task.status == 'Completed' %}
+                            <button class="btn btn-outline-secondary rounded-pill" disabled>
+                                <i class="bi bi-check-all"></i> Task Finished
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="rateModal{{ task.id }}" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow-lg rounded-4">
+                    <div class="modal-header border-0">
+                        <h5 class="fw-bold">Finalize Task</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form class="rate-form" data-task-id="{{ task.id }}">
+                            <p class="text-center text-muted mb-4">Confirm completion and rate <strong>{{ task.doer.name }}</strong></p>
+                            
+                            <div class="text-center mb-4">
+                                <div class="star-rating">
+                                    <input type="radio" id="star5-{{task.id}}" name="rating" value="5" required /><label for="star5-{{task.id}}">★</label>
+                                    <input type="radio" id="star4-{{task.id}}" name="rating" value="4" /><label for="star4-{{task.id}}">★</label>
+                                    <input type="radio" id="star3-{{task.id}}" name="rating" value="3" /><label for="star3-{{task.id}}">★</label>
+                                    <input type="radio" id="star2-{{task.id}}" name="rating" value="2" /><label for="star2-{{task.id}}">★</label>
+                                    <input type="radio" id="star1-{{task.id}}" name="rating" value="1" /><label for="star1-{{task.id}}">★</label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <label class="form-label small fw-bold">Comments (Impacts AI Priority Score)</label>
+                                <textarea class="form-control rounded-3" name="comment" rows="3" placeholder="How was the service?" required></textarea>
+                            </div>
+
+                            <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 fw-bold">Confirm & Close Task</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12 text-center py-5">
+            <i class="bi bi-clipboard-x text-muted" style="font-size: 3rem;"></i>
+            <p class="mt-3 text-muted">You haven't hired anyone for a task yet.</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+
+<style>
+    .bg-soft-primary { background-color: #eef2ff; }
+    
+    /* Star Rating CSS */
+    .star-rating {
+        direction: rtl;
+        display: inline-block;
+        font-size: 2.5rem;
+    }
+    .star-rating input { display: none; }
+    .star-rating label {
+        color: #e2e8f0;
+        cursor: pointer;
+        transition: color 0.2s;
+    }
+    .star-rating label:hover,
+    .star-rating label:hover ~ label,
+    .star-rating input:checked ~ label {
+        color: #f59e0b;
+    }
+</style>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    document.querySelectorAll('.rate-form').forEach(form => {
+        form.onsubmit = function(e) {
+            e.preventDefault();
+            const taskId = this.getAttribute('data-task-id');
+            const formData = new FormData(this);
+            formData.append('task_id', taskId);
+
+            fetch("{% url 'giver_complete_and_rate' %}", {
+                method: "POST",
+                headers: { "X-CSRFToken": "{{ csrf_token }}" },
+                body: new URLSearchParams(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Success!',
+                        text: data.message,
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                }
+            });
+        };
+    });
+</script>
+{% endblock %}

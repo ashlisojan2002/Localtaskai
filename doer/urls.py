@@ -21,4 +21,8 @@ urlpatterns = [
     
     # Specific Chat Selection in Inbox (Changed from task_id to giver_id)
     path('messages/<int:giver_id>/', views.doer_chat_inbox, name='doer_chat_inbox'),
+    path('my-hired-jobs/', views.doer_hired_jobs, name='doer_hired_jobs'),
+    path('submit-task-approval/', views.submit_task_for_approval, name='submit_task_for_approval'),
+    path('doer/rate-giver/', views.doer_rate_giver, name='doer_rate_giver'),
+    path('doer/history/', views.doer_completed_history, name='doer_completed_history'),
 ]

@@ -8,7 +8,7 @@ import re
 from django.core.files.base import ContentFile
 import base64
 from django.http import JsonResponse
-from .models import Task
+from .models import Task,Review
 from adminpanel.models import District, Place, Pincode, Category, Skill
 from asgiref.sync import async_to_sync
 from channels.layers import get_channel_layer
@@ -19,6 +19,7 @@ from doer.models import TaskRequest, Message
 from doer.utils import decrypt_message
 from django.db.models import Q
 from accounts.models import User
+from django.db import transaction
 
 
 
@@ -330,3 +331,80 @@ def giver_chat_inbox(request, doer_id=None):
         'room_id': room_id,
         'active_app_accepted': active_app_accepted
     })
+
+
+
+
+@login_required
+def hire_doer_ajax(request):
+    if request.method == "POST":
+        req_id = request.POST.get('req_id')
+        # Ensure the requester is the owner of the task
+        task_request = get_object_or_404(TaskRequest, id=req_id, task__giver=request.user)
+        task = task_request.task
+
+        if task.status == 'Open':
+            with transaction.atomic():
+                # 1. Update TaskRequest
+                task_request.status = 'Accepted'
+                task_request.save()
+
+                # 2. Assign doer to Task (This triggers your model save logic)
+                task.doer = task_request.doer
+                task.status = 'Accepted'
+                task.save()
+
+                # 3. Mark other pending applicants as Rejected
+                task.task_requests.filter(status='Pending').exclude(id=req_id).update(status='Rejected')
+
+            return JsonResponse({'status': 'success', 'message': f'Hired {task_request.doer.name} successfully!'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Task is no longer open.'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request.'}, status=400)
+
+
+
+
+@login_required
+def giver_complete_and_rate(request):
+    if request.method == "POST":
+        task_id = request.POST.get('task_id')
+        rating = request.POST.get('rating')
+        comment = request.POST.get('comment')
+        
+        task = get_object_or_404(Task, id=task_id, giver=request.user)
+
+        with transaction.atomic():
+            # 1. Update Task Status
+            task.status = 'Completed'
+            task.save()
+
+            # 2. Create the Review
+            Review.objects.create(
+                task=task,
+                reviewer=request.user,
+                reviewee=task.doer,
+                rating=rating,
+                comment=comment
+            )
+            
+            # 3. Logic for AI: You can trigger a function here to 
+            # recalculate the Doer's Priority Score based on this rating.
+
+        return JsonResponse({'status': 'success', 'message': 'Task closed and Doer rated!'})
+    
+@login_required
+def giver_hired_tasks(request):
+    # Fetch tasks where a doer is assigned
+    hired_tasks = Task.objects.filter(
+        giver=request.user, 
+        doer__isnull=False
+    ).select_related('doer', 'category').order_by('-created_at')
+    
+    return render(request, 'giver/hired_tasks.html', {
+        'hired_tasks': hired_tasks
+    })
+
+
+
