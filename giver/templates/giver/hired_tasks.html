@@ -22,16 +22,20 @@
                     <h5 class="fw-bold mb-3">{{ task.title }}</h5>
                     
                     <div class="d-flex align-items-center p-2 bg-light rounded-3 mb-3">
-                        {% if task.doer.photo %}
-                            <img src="{{ task.doer.photo.url }}" class="rounded-circle border me-2" width="45" height="45" style="object-fit: cover;">
-                        {% else %}
-                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 45px; height: 45px;">
-                                {{ task.doer.name|slice:":1" }}
-                            </div>
-                        {% endif %}
+                        <a href="{% url 'public_doer_profile' task.doer.id %}" class="text-decoration-none">
+                            {% if task.doer.photo %}
+                                <img src="{{ task.doer.photo.url }}" class="rounded-circle border me-2" width="45" height="45" style="object-fit: cover;">
+                            {% else %}
+                                <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center me-2" style="width: 45px; height: 45px;">
+                                    {{ task.doer.name|slice:":1" }}
+                                </div>
+                            {% endif %}
+                        </a>
                         <div>
                             <small class="text-muted d-block" style="font-size: 0.7rem;">HIRED DOER</small>
-                            <span class="fw-bold">{{ task.doer.name }}</span>
+                            <a href="{% url 'public_doer_profile' task.doer.id %}" class="text-dark text-decoration-none">
+                                <span class="fw-bold">{{ task.doer.name }}</span>
+                            </a>
                             {% if task.doer.approval_status == 'Accepted' %}
                                 <i class="bi bi-patch-check-fill text-primary small"></i>
                             {% endif %}
@@ -137,8 +141,6 @@
         color: #f59e0b;
     }
 </style>
-
-
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

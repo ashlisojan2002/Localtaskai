@@ -27,5 +27,6 @@ path('giver-messages/', views.giver_chat_inbox, name='giver_chat_inbox'),
 
     # 2. The AJAX Action to Close Task and Save Review
     path('giver/complete-and-rate/', views.giver_complete_and_rate, name='giver_complete_and_rate'),
+    path('view-giver/<int:giver_id>/', views.public_giver_profile, name='public_giver_profile'),
     
 ]

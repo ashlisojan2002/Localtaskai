@@ -25,4 +25,7 @@ urlpatterns = [
     path('submit-task-approval/', views.submit_task_for_approval, name='submit_task_for_approval'),
     path('doer/rate-giver/', views.doer_rate_giver, name='doer_rate_giver'),
     path('doer/history/', views.doer_completed_history, name='doer_completed_history'),
+    # URL for the single-page skill and location management
+path('manage-preferences/<int:user_id>/', views.manage_doer_preferences, name='manage_preferences'),
+path('view-doer/<int:doer_id>/', views.public_doer_profile, name='public_doer_profile'),
 ]

@@ -50,31 +50,44 @@
                             {% endif %}
                         </p>
                     </div>
+
+                    <div class="col-md-6">
+                        <label class="text-muted small fw-bold text-uppercase">Average Rating</label>
+                        <p class="fs-5 fw-bold mb-0">
+                            {% if total_reviews > 0 %}
+                                <span style="color: #f59e0b;">
+                                    <i class="bi bi-star-fill me-1"></i>{{ avg_rating|floatformat:1 }}
+                                </span>
+                                <span class="text-muted small fw-normal">({{ total_reviews }} Reviews)</span>
+                            {% else %}
+                                <span class="text-muted small fw-normal"><i class="bi bi-star me-1"></i>No Ratings</span>
+                            {% endif %}
+                        </p>
+                    </div>
                 </div>
 
-               <div class="mt-5 d-flex align-items-center gap-4">
-    <a href="{% url 'doer_profile_edit' %}" class="btn px-4 py-2 text-white fw-bold shadow-sm" 
-       style="background: #10b981; border-radius: 12px; border: none; min-width: 160px;">
-        <i class="bi bi-pencil-square me-2"></i>Edit Profile
-    </a>
-    
-    <button type="button" class="btn btn-link text-danger fw-bold text-decoration-none p-0" 
-            data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" 
-            style="font-size: 0.9rem; transition: opacity 0.2s;"
-            onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
-        <i class="bi bi-trash3 me-1"></i> Delete Account
-    </button>
-    <a href="{% url 'change_password' %}" class="btn px-4 py-2 fw-bold shadow-sm" 
-       style="background: #ffffff; color: #1a1a1a; border: 1px solid #e0e0e0; border-radius: 12px; min-width: 160px;">
-        <i class="bi bi-key-fill me-2 text-warning"></i>Change Password
-    </a>
-</div>
-</div>
+                <div class="mt-5 d-flex align-items-center gap-4">
+                    <a href="{% url 'doer_profile_edit' %}" class="btn px-4 py-2 text-white fw-bold shadow-sm" 
+                       style="background: #10b981; border-radius: 12px; border: none; min-width: 160px;">
+                         <i class="bi bi-pencil-square me-2"></i>Edit Profile
+                    </a>
+                    
+                    <button type="button" class="btn btn-link text-danger fw-bold text-decoration-none p-0" 
+                            data-bs-toggle="modal" data-bs-target="#deleteConfirmModal" 
+                            style="font-size: 0.9rem; transition: opacity 0.2s;"
+                            onmouseover="this.style.opacity='0.7'" onmouseout="this.style.opacity='1'">
+                        <i class="bi bi-trash3 me-1"></i> Delete Account
+                    </button>
+                    <a href="{% url 'change_password' %}" class="btn px-4 py-2 fw-bold shadow-sm" 
+                       style="background: #ffffff; color: #1a1a1a; border: 1px solid #e0e0e0; border-radius: 12px; min-width: 160px;">
+                        <i class="bi bi-key-fill me-2 text-warning"></i>Change Password
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0" style="border-radius: 20px; overflow: hidden;">

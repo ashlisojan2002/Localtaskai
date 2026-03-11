@@ -20,13 +20,25 @@ from doer.utils import decrypt_message
 from django.db.models import Q
 from accounts.models import User
 from django.db import transaction
+from django.db.models import Avg, Count
+from accounts.models import User, UserReport
 
 
 
 
 @login_required
 def giver_profile_view(request):
-    return render(request, 'giver/profile.html')
+    # Calculate average rating received by the Giver
+    stats = Review.objects.filter(reviewee=request.user).aggregate(
+        avg_rating=Avg('rating'),
+        total_reviews=Count('id')
+    )
+
+    context = {
+        'avg_rating': stats['avg_rating'] or 0,
+        'total_reviews': stats['total_reviews'] or 0,
+    }
+    return render(request, 'giver/profile.html', context)
 
 @login_required
 def giver_profile_edit(request):
@@ -406,5 +418,42 @@ def giver_hired_tasks(request):
         'hired_tasks': hired_tasks
     })
 
+@login_required
+def public_giver_profile(request, giver_id):
+    giver_user = get_object_or_404(User, id=giver_id)
+    
+    # --- ADD THIS POST LOGIC ---
+    if request.method == "POST":
+        reason = request.POST.get('reason')
+        desc = request.POST.get('description')
+        
+        # Anti-Spam Logic: Update existing or create new
+        report, created = UserReport.objects.update_or_create(
+            reporter=request.user, 
+            reported_user=giver_user,
+            is_resolved=False, 
+            defaults={'reason': reason, 'description': desc}
+        )
+        
+        if created:
+            messages.success(request, f"Report filed against {giver_user.name}.")
+        else:
+            messages.info(request, "Your previous report for this Giver has been updated.")
+            
+        # CRITICAL: Redirect back to THIS SAME VIEW (Giver Profile)
+        return redirect('public_giver_profile', giver_id=giver_id)
+    # ---------------------------
 
-
+    # Your existing GET logic
+    stats = Review.objects.filter(reviewee=giver_user).aggregate(
+        avg=Avg('rating'), count=Count('id')
+    )
+    reviews = Review.objects.filter(reviewee=giver_user).select_related('reviewer').order_by('-created_at')
+    
+    context = {
+        'giver': giver_user,
+        'avg_rating': stats['avg'] or 0,
+        'total_reviews': stats['count'],
+        'reviews': reviews,
+    }
+    return render(request, 'doer/view_giver_public.html', context)

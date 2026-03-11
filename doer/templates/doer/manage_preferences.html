@@ -1,0 +1,142 @@
+{% extends 'doer/base_doer.html' %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="text-center mb-4">
+        <h2>Professional Preferences</h2>
+        <p class="text-muted">Select your expertise and where you want to work (Max 10 each).</p>
+        
+        <div class="btn-group shadow-sm" role="group">
+            <button type="button" id="showSkills" class="btn btn-primary active px-4">My Skills</button>
+            <button type="button" id="showLocations" class="btn btn-outline-primary px-4">Work Locations</button>
+        </div>
+    </div>
+
+    <form method="POST" id="prefForm">
+        {% csrf_token %}
+
+        <div id="skillsSection">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Skill Selection</h4>
+                <span class="badge bg-primary" id="skill-badge">0 / 10 Selected</span>
+            </div>
+
+            {% for category in categories %}
+            <div class="card mb-3 border-0 shadow-sm">
+                <div class="card-header bg-dark text-white py-2">
+                    <h6 class="mb-0">{{ category.category_name }}</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for skill in category.skills.all %}
+                        <div class="col-md-3 mb-2">
+                            <div class="form-check custom-check">
+                                <input class="form-check-input skill-cb" type="checkbox" name="skills" 
+                                       value="{{ skill.id }}" id="s{{ skill.id }}"
+                                       {% if skill.id in current_skills %}checked{% endif %}>
+                                <label class="form-check-label" for="s{{ skill.id }}">{{ skill.skill_name }}</label>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="locationsSection" style="display: none;">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4>Location Selection</h4>
+                <span class="badge bg-success" id="location-badge">0 / 10 Selected</span>
+            </div>
+
+            {% for district in districts %}
+            <div class="card mb-4 border-0 shadow-sm border-start border-success border-4">
+                <div class="card-header bg-light">
+                    <h5 class="mb-0 text-success">{{ district.district_name }}</h5>
+                </div>
+                <div class="card-body">
+                    {% for place in district.places.all %}
+                    <div class="mb-3">
+                        <span class="fw-bold text-secondary small">{{ place.place_name }}</span>
+                        <div class="d-flex flex-wrap gap-3 mt-1 ms-2">
+                            {% for pin in place.pincodes.all %}
+                            <div class="pincode-item">
+                                <input class="form-check-input location-cb" type="checkbox" name="pincodes" 
+                                       value="{{ pin.id }}" id="p{{ pin.id }}"
+                                       {% if pin.id in current_pincodes %}checked{% endif %}>
+                                <label class="small" for="p{{ pin.id }}">{{ pin.pincode_number }}</label>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="fixed-bottom bg-white border-top p-3 text-center shadow">
+            <button type="submit" class="btn btn-success btn-lg px-5">Save All Preferences</button>
+        </div>
+    </form>
+</div>
+
+<script>
+    const skillBtn = document.getElementById('showSkills');
+    const locBtn = document.getElementById('showLocations');
+    const skillSec = document.getElementById('skillsSection');
+    const locSec = document.getElementById('locationsSection');
+
+    // Toggle Logic
+    skillBtn.addEventListener('click', () => {
+        skillSec.style.display = 'block';
+        locSec.style.display = 'none';
+        skillBtn.classList.add('active', 'btn-primary');
+        skillBtn.classList.remove('btn-outline-primary');
+        locBtn.classList.add('btn-outline-primary');
+        locBtn.classList.remove('active', 'btn-primary');
+    });
+
+    locBtn.addEventListener('click', () => {
+        skillSec.style.display = 'none';
+        locSec.style.display = 'block';
+        locBtn.classList.add('active', 'btn-primary');
+        locBtn.classList.remove('btn-outline-primary');
+        skillBtn.classList.add('btn-outline-primary');
+        skillBtn.classList.remove('active', 'btn-primary');
+    });
+
+    // Limit Enforcement (Max 10)
+    function handleLimit(selector, badgeId, limit) {
+        const checkboxes = document.querySelectorAll(selector);
+        const badge = document.getElementById(badgeId);
+
+        const updateCount = () => {
+            const count = document.querySelectorAll(`${selector}:checked`).length;
+            badge.innerText = `${count} / ${limit} Selected`;
+            return count;
+        };
+
+        checkboxes.forEach(cb => {
+            cb.addEventListener('change', () => {
+                if (updateCount() > limit) {
+                    cb.checked = false;
+                    alert(`Maximum ${limit} allowed!`);
+                    updateCount();
+                }
+            });
+        });
+        updateCount();
+    }
+
+    handleLimit('.skill-cb', 'skill-badge', 10);
+    handleLimit('.location-cb', 'location-badge', 10);
+</script>
+
+<style>
+    .custom-check:hover { background: #f8f9fa; border-radius: 5px; }
+    .pincode-item { background: #eee; padding: 2px 8px; border-radius: 4px; border: 1px solid #ddd; }
+    #prefForm { padding-bottom: 80px; } /* Space for sticky button */
+</style>
+{% endblock %}

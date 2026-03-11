@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.db import models
+from django.conf import settings
 
 class User(AbstractUser):
     # Registration Fields
@@ -35,3 +37,32 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.email
+    
+
+
+
+class UserReport(models.Model):
+    REPORT_REASONS = [
+        ('fake', 'Fake Profile / Scammer'),
+        ('harassment', 'Harassment or Rude Behavior'),
+        ('payment', 'Payment Issues'),
+        ('quality', 'Poor Work Quality / No Show'),
+        ('no_show', 'Did Not Do/Finish Task'),
+        ('other', 'Other'),
+    ]
+
+    # The person filing the report
+    reporter = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reports_filed')
+    
+    # The person being reported
+    reported_user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reports_received')
+    
+    reason = models.CharField(max_length=20, choices=REPORT_REASONS)
+    description = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Admin can mark as 'Resolved' if the report was fake or handled
+    is_resolved = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"Report against {self.reported_user.email} by {self.reporter.email}"

@@ -10,13 +10,16 @@ import base64
 from django.shortcuts import render
 from giver.models import Task,Review  # Import Task from the giver app
 from adminpanel.models import District, Category, Skill # Import these from adminpanel
-from .models import TaskRequest
+from .models import TaskRequest,DoerSkill,DoerWorkArea
 from .models import Message
 from .utils import decrypt_message
 from django.contrib.auth import get_user_model
 from django.utils import timezone
 from datetime import timedelta
 from django.http import JsonResponse
+from django.db import transaction
+from django.db.models import Avg, Count
+from accounts.models import User, UserReport
 
 User = get_user_model()
 from django.db.models import Q
@@ -24,8 +27,20 @@ from django.db.models import Q
 
 @login_required
 def doer_profile_view(request):
-    # 'doer' will now specifically refer to the person owning this profile
-    return render(request, 'doer/profile.html', {'doer': request.user})
+    # Calculate the average rating and total review count for the current user
+    # 'reviewee' is the field in your Review model that points to the Doer
+    rating_data = Review.objects.filter(reviewee=request.user).aggregate(
+        average=Avg('rating'),
+        count=Count('id')
+    )
+
+    context = {
+        'doer': request.user,
+        'avg_rating': rating_data['average'] or 0,  # Default to 0 if no reviews
+        'total_reviews': rating_data['count'] or 0,
+    }
+    
+    return render(request, 'doer/profile.html', context)
 
 @login_required
 def doer_profile_edit(request):
@@ -294,6 +309,8 @@ def my_task_requests_view(request):
 
 
 
+
+
 @login_required
 def doer_chat_inbox(request, giver_id=None):
     # 1. Sidebar Logic: Filter unique givers and check approval status
@@ -421,3 +438,98 @@ def doer_completed_history(request):
     return render(request, 'doer/completed_history.html', {
         'completed_tasks': completed_tasks
     })
+
+
+
+@login_required
+def manage_doer_preferences(request, user_id):
+    user = get_object_or_404(User, id=user_id)
+    
+    if request.method == "POST":
+        selected_skills = request.POST.getlist('skills')
+        selected_pincodes = request.POST.getlist('pincodes')
+
+        # Limit Check (Max 10)
+        if len(selected_skills) > 10 or len(selected_pincodes) > 10:
+            messages.error(request, "Selection limit exceeded (Max 10 each).")
+            return redirect('manage_preferences', user_id=user.id)
+
+        with transaction.atomic():
+            # Update Skills
+            DoerSkill.objects.filter(user=user).delete()
+            for s_id in selected_skills:
+                DoerSkill.objects.create(user=user, skill_id=s_id)
+
+            # Update Locations
+            DoerWorkArea.objects.filter(user=user).delete()
+            for p_id in selected_pincodes:
+                DoerWorkArea.objects.create(user=user, pincode_id=p_id)
+
+        messages.success(request, "Professional preferences updated!")
+        return redirect('doer_profile_view')
+
+    context = {
+        # Prefetch ensures we get the children (skills/places/pincodes) in one database hit
+        'categories': Category.objects.prefetch_related('skills').filter(status='Active'),
+        'districts': District.objects.prefetch_related('places__pincodes').filter(status='Active'),
+        'current_skills': DoerSkill.objects.filter(user=user).values_list('skill_id', flat=True),
+        'current_pincodes': DoerWorkArea.objects.filter(user=user).values_list('pincode_id', flat=True),
+    }
+    return render(request, 'doer/manage_preferences.html', context)
+
+
+
+
+
+
+
+
+
+@login_required
+def public_doer_profile(request, doer_id):
+    doer_user = get_object_or_404(User, id=doer_id)
+    
+    # 1. Handle Report (POST)
+    if request.method == "POST":
+        reason = request.POST.get('reason')
+        desc = request.POST.get('description')
+        
+        # Safe update logic: find the first existing unresolved report by this giver
+        existing_report = UserReport.objects.filter(
+            reporter=request.user, 
+            reported_user=doer_user, 
+            is_resolved=False
+        ).first()
+
+        if existing_report:
+            existing_report.reason = reason
+            existing_report.description = desc
+            existing_report.save()
+            messages.info(request, "Your existing report has been updated.")
+        else:
+            UserReport.objects.create(
+                reporter=request.user, 
+                reported_user=doer_user, 
+                reason=reason, 
+                description=desc
+            )
+            messages.success(request, "Report filed successfully.")
+        return redirect('public_doer_profile', doer_id=doer_id)
+
+    # 2. Fetch Data (GET)
+    stats = Review.objects.filter(reviewee=doer_user).aggregate(avg=Avg('rating'), count=Count('id'))
+    reviews = Review.objects.filter(reviewee=doer_user).select_related('reviewer').order_by('-created_at')
+    
+    # Ensure we select related fields for Category, District, and Place
+    skills = DoerSkill.objects.filter(user=doer_user).select_related('skill__category')
+    locations = DoerWorkArea.objects.filter(user=doer_user).select_related('pincode__place__district')
+
+    context = {
+        'doer': doer_user,
+        'avg_rating': stats['avg'] or 0,
+        'total_reviews': stats['count'],
+        'reviews': reviews,
+        'skills': skills,
+        'locations': locations,
+    }
+    return render(request, 'giver/view_doer_public.html', context)
