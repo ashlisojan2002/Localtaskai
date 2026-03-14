@@ -184,9 +184,13 @@
             <i class="bi bi-tools"></i> Skills & Categories
         </a>
 
-        <a href="#" class="admin-nav-link">
-            <i class="bi bi-gear-fill"></i> Settings
-        </a>
+       <li class="nav-item">
+    <a class="nav-link rounded-3 px-3 py-2 d-flex align-items-center transition {% if request.resolver_match.url_name == 'admin_report_center' %}active bg-danger text-white shadow-sm{% else %}text-muted{% endif %}" 
+       href="{% url 'admin_report_center' %}">
+        <i class="bi bi-shield-exclamation-fill me-2"></i>
+        <span class="fw-bold">Report Center</span>
+    </a>
+</li>
     </div>
 </div>
 

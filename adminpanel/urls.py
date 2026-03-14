@@ -29,5 +29,7 @@ path('delete-district/<int:pk>/', views.delete_district, name='delete_district')
     path('skills/delete/<int:pk>/', views.delete_skill, name='delete_skill'),
     path('tasks/', views.admin_task_management, name='admin_task_management'),
 path('delete-task/<int:pk>/', views.admin_delete_task, name='admin_delete_task'),
+path('enforcement/', views.admin_report_center, name='admin_report_center'),
+path('investigate/<int:user_id>/', views.admin_investigate_user, name='admin_investigate_user'),
 
 ]

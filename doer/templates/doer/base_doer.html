@@ -208,6 +208,7 @@
                         <i class="bi bi-clock-history me-2"></i>Job History
                     </a>
                 </li>
+                
                 <li class="nav-item">
     <a class="nav-link" href="{% url 'manage_preferences' user.id %}">
         <i class="fas fa-tools"></i> 
@@ -225,7 +226,19 @@
                     </a>
                 </li>
             </ul>
-           
+           <li class="nav-item">
+    <a class="nav-link {% if request.resolver_match.url_name == 'doer_job_requests' %}active-link{% endif %}" 
+       href="{% url 'doer_job_requests' %}">
+        <i class="bi bi-envelope-check me-2 text-primary"></i>
+        <span class="fw-bold">Job Invitations</span>
+        
+        {% if pending_req_count > 0 %}
+            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
+                <span class="visually-hidden">New alerts</span>
+            </span>
+        {% endif %}
+    </a>
+</li>
 
             <div class="doer-status-box">
                 <div class="d-none d-lg-block text-end me-2" style="line-height: 1.2;">

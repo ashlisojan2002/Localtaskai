@@ -1,102 +1,119 @@
 {% extends 'giver/base_giver.html' %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
 <div class="container-fluid py-4">
-    <div class="row g-0 shadow-sm rounded-4 overflow-hidden bg-white" style="height: 85vh; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+    <div class="row g-0 chat-master-container shadow-lg rounded-5 overflow-hidden animate__animated animate__fadeIn">
         
-        <div class="col-md-4 col-lg-3 border-end bg-white overflow-auto">
-            <div class="p-3 border-bottom bg-white sticky-top">
-                <h5 class="fw-bold mb-0">Applicant Chats</h5>
+        <div class="col-md-4 col-lg-3 contact-sidebar border-end bg-white overflow-auto custom-scrollbar">
+            <div class="p-4 border-bottom bg-white sticky-top z-index-2">
+                <h5 class="fw-900 text-dark mb-0 d-flex align-items-center">
+                    <i class="bi bi-chat-heart-fill text-primary me-2"></i>Inbox
+                </h5>
             </div>
-            <div class="list-group list-group-flush">
+            
+            <div class="list-group list-group-flush p-2">
                 {% for app in applications %}
-                <div class="list-group-item list-group-item-action p-3 border-0 {% if other_user.id == app.doer.id %}active-chat-item{% endif %}"
-                   style="transition: 0.2s; cursor: pointer;" onclick="window.location.href='{% url 'giver_chat_inbox' app.doer.id %}'">
+                <div class="list-group-item list-group-item-action contact-card border-0 mb-2 rounded-4 {% if other_user.id == app.doer.id %}active-chat-item{% endif %}"
+                   style="transition: 0.2s; cursor: pointer;" 
+                   onclick="window.location.href='{% url 'giver_chat_inbox' app.doer.id %}'">
                     <div class="d-flex align-items-center justify-content-between">
                         <div class="d-flex align-items-center overflow-hidden">
                             <div class="position-relative me-3">
                                 <a href="{% url 'public_doer_profile' app.doer.id %}" onclick="event.stopPropagation();">
                                     {% if app.doer.photo %}
-                                        <img src="{{ app.doer.photo.url }}" class="rounded-circle border" width="45" height="45" style="object-fit: cover;">
+                                        <img src="{{ app.doer.photo.url }}" class="rounded-circle border-white shadow-sm" width="50" height="50" style="object-fit: cover; border: 2px solid white;">
                                     {% else %}
-                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center border" style="width: 45px; height: 45px; font-weight: bold;">
+                                        <div class="rounded-circle bg-emerald-gradient text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px; font-weight: 800;">
                                             {{ app.doer.name|slice:":1" }}
                                         </div>
                                     {% endif %}
                                 </a>
+                                {% if app.is_accepted %}
+                                    <span class="position-absolute bottom-0 end-0 bg-success border border-white rounded-circle" style="width: 14px; height: 14px;"></span>
+                                {% endif %}
                             </div>
+
                             <div class="overflow-hidden">
-                                <h6 class="mb-0 fw-bold text-dark text-truncate">
-                                    {{ app.doer.name }}
+                                <h6 class="mb-0 fw-800 text-dark text-truncate">{{ app.doer.name }}</h6>
+                                <p class="mb-0 text-muted smaller fw-bold">
                                     {% if app.is_accepted %}
-                                        <i class="bi bi-patch-check-fill text-primary ms-1"></i>
+                                        <span class="text-success small">Hired Expert</span>
+                                    {% else %}
+                                        <span class="opacity-75">Applicant</span>
                                     {% endif %}
-                                </h6>
+                                </p>
                             </div>
                         </div>
 
                         <span id="unread-badge-{{ app.doer.id }}" 
-                              class="badge rounded-pill bg-primary shadow-sm unread-count-badge {% if not app.unread_count %}d-none{% endif %}" 
-                              style="font-size: 0.7rem; padding: 0.4em 0.65em;">
+                              class="msg-count-pill shadow-sm animate__animated animate__bounceIn {% if not app.unread_count or app.unread_count == 0 %}d-none{% endif %}">
                             {{ app.unread_count }}
                         </span>
                     </div>
                 </div>
                 {% empty %}
-                <div class="p-4 text-center text-muted">
-                    <p class="small">No messages yet.</p>
+                <div class="p-5 text-center">
+                    <i class="bi bi-chat-dots text-muted opacity-25" style="font-size: 3rem;"></i>
+                    <p class="small text-muted fw-bold mt-2">No conversations yet.</p>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="col-md-8 col-lg-9 d-flex flex-column bg-light overflow-hidden" style="height: 100%;">
+        <div class="col-md-8 col-lg-9 d-flex flex-column chat-main-bg overflow-hidden" style="height: 85vh;">
             {% if other_user %}
-                <div class="card-header bg-white py-3 border-bottom shadow-sm flex-shrink-0">
-                    <div class="d-flex align-items-center">
-                        <div class="position-relative me-3 ps-3">
-                            <a href="{% url 'public_doer_profile' other_user.id %}">
-                                {% if other_user.photo %}
-                                    <img src="{{ other_user.photo.url }}" class="rounded-circle border" width="50" height="50" style="object-fit: cover;">
-                                {% else %}
-                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center border" style="width: 50px; height: 50px; font-weight: bold;">
-                                        {{ other_user.name|slice:":1" }}
-                                    </div>
-                                {% endif %}
-                            </a>
-                        </div>
-                        <div>
-                            <h5 class="fw-bold mb-0 text-dark">
-                                <a href="{% url 'public_doer_profile' other_user.id %}" class="text-dark text-decoration-none">
-                                    {{ other_user.name }}
+                <div class="chat-header p-3 bg-white border-bottom shadow-sm flex-shrink-0">
+                    <div class="d-flex align-items-center justify-content-between px-3">
+                        <div class="d-flex align-items-center">
+                            <div class="position-relative me-3">
+                                <a href="{% url 'public_doer_profile' other_user.id %}">
+                                    {% if other_user.photo %}
+                                        <img src="{{ other_user.photo.url }}" class="rounded-circle border-white shadow-sm" width="55" height="55" style="object-fit: cover; border: 2px solid white;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 55px; height: 55px; font-weight: 800;">
+                                            {{ other_user.name|slice:":1" }}
+                                        </div>
+                                    {% endif %}
                                 </a>
-                                {% if active_app_accepted %}
-                                    <i class="bi bi-patch-check-fill text-primary ms-1" title="Accepted Match"></i>
-                                {% endif %}
-                            </h5>
+                                <span class="header-status-dot"></span>
+                            </div>
+                            <div>
+                                <h5 class="fw-900 mb-0 text-dark">
+                                    <a href="{% url 'public_doer_profile' other_user.id %}" class="text-dark text-decoration-none">
+                                        {{ other_user.name }}
+                                    </a>
+                                    {% if active_app_accepted %}
+                                        <i class="bi bi-patch-check-fill text-primary ms-1" title="Verified Match"></i>
+                                    {% endif %}
+                                </h5>
+                                <div class="text-success smaller fw-bold"><i class="bi bi-circle-fill" style="font-size: 6px;"></i> Secure Channel</div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div id="chat-log" class="flex-grow-1 p-4 overflow-auto" style="background: #f0f2f5; display: flex; flex-direction: column;">
+                <div id="chat-log" class="flex-grow-1 p-4 overflow-auto custom-scrollbar" style="background-color: #f8fafc; background-image: radial-gradient(#e2e8f0 1px, transparent 1px); background-size: 20px 20px;">
                     {% for msg in chat_history %}
-                        <div class="d-flex {% if msg.sender_name == request.user.name %}justify-content-end{% else %}justify-content-start{% endif %} mb-3">
+                        <div class="d-flex {% if msg.sender_name == request.user.name %}justify-content-end{% else %}justify-content-start{% endif %} mb-4">
                             {% if msg.sender_name != request.user.name %}
                                 <div class="me-2 mt-auto">
                                     {% if other_user.photo %}
-                                        <img src="{{ other_user.photo.url }}" class="rounded-circle border" width="30" height="30" style="object-fit: cover;">
+                                        <img src="{{ other_user.photo.url }}" class="rounded-circle shadow-sm" width="35" height="35" style="object-fit: cover;">
                                     {% else %}
-                                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 0.7rem;">
+                                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px; font-size: 0.8rem;">
                                             {{ other_user.name|slice:":1" }}
                                         </div>
                                     {% endif %}
                                 </div>
                             {% endif %}
 
-                            <div class="p-3 shadow-sm bubble" 
-                                 style="max-width: 70%; border-radius: 1.2rem; {% if msg.sender_name == request.user.name %}background: #0ea5e9; color: white; border-bottom-right-radius: 0.2rem;{% else %}background: white; color: #334155; border-bottom-left-radius: 0.2rem;{% endif %}">
-                                <span style="font-size: 0.95rem;">{{ msg.content }}</span>
-                                <div class="text-end mt-1" style="font-size: 0.65rem; opacity: 0.8;">
+                            <div class="message-bubble p-3 shadow-sm" 
+                                 style="{% if msg.sender_name == request.user.name %}background: var(--main-gradient); color: white; border-bottom-right-radius: 4px;{% else %}background: white; color: #334155; border-bottom-left-radius: 4px;{% endif %}">
+                                <span style="font-size: 0.95rem; font-weight: 500;">{{ msg.content }}</span>
+                                <div class="text-end mt-1" style="font-size: 0.65rem; opacity: 0.8; font-weight: 700;">
                                     {{ msg.timestamp|date:"h:i A" }}
                                     {% if msg.sender_name == request.user.name %}
                                         <i class="bi bi-check2-all ms-1"></i>
@@ -107,9 +124,9 @@
                             {% if msg.sender_name == request.user.name %}
                                 <div class="ms-2 mt-auto">
                                     {% if request.user.photo %}
-                                        <img src="{{ request.user.photo.url }}" class="rounded-circle border" width="30" height="30" style="object-fit: cover;">
+                                        <img src="{{ request.user.photo.url }}" class="rounded-circle shadow-sm" width="35" height="35" style="object-fit: cover;">
                                     {% else %}
-                                        <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 0.7rem;">
+                                        <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px; font-size: 0.8rem;">
                                             {{ request.user.name|slice:":1" }}
                                         </div>
                                     {% endif %}
@@ -119,21 +136,21 @@
                     {% endfor %}
                 </div>
 
-                <div class="card-footer bg-white border-top p-3 flex-shrink-0">
-                    <div class="input-group bg-light rounded-pill px-3 py-1 border shadow-sm">
-                        <input id="chat-message-input" type="text" class="form-control border-0 bg-transparent py-2 shadow-none" placeholder="Type your message...">
-                        <button id="chat-message-submit" class="btn btn-primary rounded-circle ms-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
-                            <i class="bi bi-send-fill"></i>
+                <div class="p-3 bg-white border-top flex-shrink-0">
+                    <div class="input-group messenger-input-pill bg-light rounded-pill p-2 border shadow-sm">
+                        <input id="chat-message-input" type="text" class="form-control border-0 bg-transparent py-2 px-3 fw-bold" placeholder="Message {{ other_user.name }}..." style="box-shadow: none;">
+                        <button id="chat-message-submit" class="btn btn-emerald-gradient rounded-circle ms-2" style="width: 45px; height: 45px; display: flex; align-items: center; justify-content: center;">
+                            <i class="bi bi-send-fill text-white"></i>
                         </button>
                     </div>
                 </div>
             {% else %}
-                <div class="m-auto text-center text-muted">
-                    <div class="bg-white rounded-circle d-inline-flex p-4 shadow-sm mb-3">
-                        <i class="bi bi-chat-right-dots text-primary" style="font-size: 3rem;"></i>
+                <div class="m-auto text-center">
+                    <div class="bg-white rounded-5 d-inline-flex p-5 shadow-sm mb-4">
+                        <i class="bi bi-chat-quote-fill text-emerald" style="font-size: 5rem;"></i>
                     </div>
-                    <h5 class="fw-bold">Messages</h5>
-                    <p>Select a doer from the sidebar to start chatting.</p>
+                    <h3 class="fw-900 text-dark">Secure Messenger</h3>
+                    <p class="text-muted fw-bold">Select an expert from the inbox to coordinate your tasks.</p>
                 </div>
             {% endif %}
         </div>
@@ -141,14 +158,60 @@
 </div>
 
 <style>
-    .active-chat-item { background-color: #f0f9ff !important; border-left: 4px solid #0ea5e9 !important; }
-    .bubble { transition: all 0.2s ease; position: relative; }
-    #chat-log::-webkit-scrollbar { width: 5px; }
-    #chat-log::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+    /* --- VIBRANT & HIGH-END CHAT CSS --- */
+    .chat-master-container { height: 85vh; border: 1px solid #edf2f7; background: #fff; }
+    .fw-900 { font-weight: 900; }
+    .fw-800 { font-weight: 800; }
+    .smaller { font-size: 0.7rem; }
     
-    body { 
-        overflow-y: auto; 
+    .bg-emerald-gradient { background: var(--main-gradient); }
+    .btn-emerald-gradient { background: var(--main-gradient); border: none; transition: 0.3s; }
+    .btn-emerald-gradient:hover { transform: scale(1.1) rotate(-5deg); }
+
+    /* Contact Cards */
+    .active-chat-item { background: #f0fdf4 !important; border: 1px solid #10b981 !important; }
+    .contact-card:hover:not(.active-chat-item) { background: #f8fafc; transform: translateX(5px); }
+    
+    /* Message Count Badge (The Request) */
+    .msg-count-pill {
+        background: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
+        color: white;
+        font-size: 0.7rem;
+        font-weight: 800;
+        min-width: 22px;
+        height: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 50%;
+        border: 2px solid white;
+        box-shadow: 0 4px 10px rgba(255, 75, 43, 0.3);
     }
+
+    /* Message Bubbles */
+    .message-bubble { 
+        max-width: 70%; 
+        border-radius: 1.5rem; 
+        position: relative;
+        animation: bubbleSlide 0.3s ease-out;
+    }
+    @keyframes bubbleSlide {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Status Indicator */
+    .header-status-dot {
+        position: absolute; bottom: 2px; right: 2px;
+        width: 14px; height: 14px;
+        background: #10b981;
+        border: 3px solid white;
+        border-radius: 50%;
+    }
+
+    /* Scrollbars */
+    .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+    .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
 </style>
 
 <script>
@@ -173,35 +236,37 @@
 
     chatSocket.onmessage = function(e) {
         const data = JSON.parse(e.data);
-        
         if (data.type === 'chat_message') {
             const isMe = data.sender === currentUser;
             const messageSenderId = data.sender_id.toString();
 
+            // Handle unread counts for non-active chats
             if (!isMe && messageSenderId !== activeOtherUserId) {
                 const badge = document.querySelector(`#unread-badge-${messageSenderId}`);
                 if (badge) {
                     let currentCount = parseInt(badge.innerText.trim()) || 0;
                     badge.innerText = currentCount + 1;
-                    badge.classList.remove('d-none'); 
+                    badge.classList.remove('d-none');
                 }
-                return; 
+                return;
             }
 
+            // Append message to active chat
             if (isMe || messageSenderId === activeOtherUserId) {
                 const userImg = isMe ? "{% if request.user.photo %}{{ request.user.photo.url }}{% endif %}" : "{% if other_user.photo %}{{ other_user.photo.url }}{% endif %}";
                 const userInitial = isMe ? "{{ request.user.name|slice:':1' }}" : "{{ other_user.name|slice:':1' }}";
-                const imgHtml = userImg ? `<img src="${userImg}" class="rounded-circle border" width="30" height="30" style="object-fit: cover;">` : 
-                               `<div class="rounded-circle ${isMe ? 'bg-info' : 'bg-secondary'} text-white d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 0.7rem;">${userInitial}</div>`;
+                const bubbleStyle = isMe ? 'background: var(--main-gradient); color: white; border-bottom-right-radius: 4px;' : 'background: white; color: #334155; border-bottom-left-radius: 4px;';
+                
+                const imgHtml = userImg ? `<img src="${userImg}" class="rounded-circle shadow-sm" width="35" height="35" style="object-fit: cover;">` : 
+                               `<div class="rounded-circle ${isMe ? 'bg-info' : 'bg-secondary'} text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 35px; height: 35px; font-size: 0.8rem;">${userInitial}</div>`;
 
                 const msgHtml = `
-                    <div class="d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'} mb-3">
+                    <div class="d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'} mb-4 animate__animated animate__fadeInUp">
                         ${!isMe ? `<div class="me-2 mt-auto">${imgHtml}</div>` : ''}
-                        <div class="p-3 shadow-sm bubble" style="max-width: 70%; border-radius: 1.2rem; ${isMe ? 'background: #0ea5e9; color: white; border-bottom-right-radius: 0.2rem;' : 'background: white; color: #334155; border-bottom-left-radius: 0.2rem;'}">
-                            <span style="font-size: 0.95rem;">${data.message}</span>
-                            <div class="text-end mt-1" style="font-size: 0.65rem; opacity: 0.8;">
-                                ${get12HourTime()}
-                                ${isMe ? '<i class="bi bi-check2-all ms-1"></i>' : ''}
+                        <div class="message-bubble p-3 shadow-sm" style="${bubbleStyle}">
+                            <span style="font-size: 0.95rem; font-weight: 500;">${data.message}</span>
+                            <div class="text-end mt-1" style="font-size: 0.65rem; opacity: 0.8; font-weight: 700;">
+                                ${get12HourTime()} ${isMe ? '<i class="bi bi-check2-all ms-1"></i>' : ''}
                             </div>
                         </div>
                         ${isMe ? `<div class="ms-2 mt-auto">${imgHtml}</div>` : ''}

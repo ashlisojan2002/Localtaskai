@@ -1,0 +1,237 @@
+{% extends 'adminpanel/base_admin.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center">
+            <a href="{% url 'admin_report_center' %}" class="btn btn-light rounded-circle me-3 shadow-sm transition"><i class="bi bi-arrow-left"></i></a>
+            <div>
+                <h2 class="fw-900 mb-0">Case <span class="text-danger">#{{ target_user.id }}</span></h2>
+                <p class="text-muted small fw-bold mb-0 text-uppercase ls-1">Security Investigation</p>
+            </div>
+        </div>
+        <div class="d-flex gap-2">
+            
+
+            <form id="investigate-clear-form" method="POST" style="display:none;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="clear">
+            </form>
+            <form id="investigate-delete-form" method="POST" style="display:none;">
+                {% csrf_token %}
+                <input type="hidden" name="action" value="delete">
+            </form>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-5 p-4 text-center bg-white h-100">
+                <div class="position-relative d-inline-block mx-auto mb-3">
+                    {% if target_user.photo %}
+                        <img src="{{ target_user.photo.url }}" class="rounded-circle border border-4 border-light shadow-sm" width="130" height="130" style="object-fit: cover;">
+                    {% else %}
+                        <div class="rounded-circle bg-dark text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 130px; height: 130px; font-size: 3.5rem; font-weight: 900;">
+                            {{ target_user.name|slice:":1" }}
+                        </div>
+                    {% endif %}
+                    
+                    {% if target_user.approval_status == 'Accepted' %}
+                        <span class="position-absolute bottom-0 end-0 bg-white rounded-circle p-1 shadow-sm border border-light" title="Identity Verified">
+                            <i class="bi bi-patch-check-fill text-primary" style="font-size: 1.8rem;"></i>
+                        </span>
+                    {% endif %}
+                </div>
+                
+                <h3 class="fw-900 mb-1 text-dark">{{ target_user.name }}</h3>
+                <p class="text-muted fw-bold mb-3">{{ target_user.email }}</p>
+                
+                <div class="d-flex justify-content-center gap-2 mb-4">
+                    <span class="badge bg-light text-dark border rounded-pill px-3 py-2 fw-800 small">{{ target_user.role|upper }}</span>
+                    {% if target_user.approval_status == 'Accepted' %}
+                        <span class="badge bg-primary-subtle text-primary border border-primary-subtle rounded-pill px-3 py-2 fw-800 small">VERIFIED</span>
+                    {% endif %}
+                </div>
+
+                <div class="bg-light-faint rounded-4 p-3 mb-4 border">
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <div class="small fw-800 text-muted text-uppercase">Avg Rating</div>
+                            <div class="h4 fw-900 mb-0 text-warning"><i class="bi bi-star-fill me-1"></i>{{ avg_rating|floatformat:1 }}</div>
+                        </div>
+                        <div class="col-6">
+                            <div class="small fw-800 text-muted text-uppercase">Reviews</div>
+                            <div class="h4 fw-900 mb-0 text-dark">{{ total_reviews }}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="text-start">
+                    <label class="text-muted-ls fw-800 text-uppercase mb-3 d-block">System Metadata</label>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fw-bold small">Phone:</span>
+                        <span class="fw-800 text-dark small">{{ target_user.phone|default:"N/A" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                        <span class="text-muted fw-bold small">Member Since:</span>
+                        <span class="fw-800 text-dark small">{{ target_user.date_joined|date:"M d, Y" }}</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span class="text-muted fw-bold text-danger small">Report Load:</span>
+                        <span class="text-danger fw-900 small">{{ report_count }}/5</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <ul class="nav nav-pills custom-pills mb-3 p-1 bg-white rounded-pill shadow-sm d-inline-flex border" id="pills-tab" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-pill fw-800 px-4" id="pills-reports-tab" data-bs-toggle="pill" data-bs-target="#pills-reports" type="button" role="tab">
+                        <i class="bi bi-shield-exclamation me-2"></i>Reports ({{ reports.count }})
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-pill fw-800 px-4" id="pills-reviews-tab" data-bs-toggle="pill" data-bs-target="#pills-reviews" type="button" role="tab">
+                        <i class="bi bi-chat-left-quote me-2"></i>Reviews ({{ reviews.count }})
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="pills-tabContent">
+                <div class="tab-pane fade show active" id="pills-reports" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-5 bg-white overflow-hidden">
+                        <div class="list-group list-group-flush">
+                            {% for report in reports %}
+                            <div class="list-group-item p-4 border-bottom transition-hover">
+                                <div class="d-flex justify-content-between align-items-start mb-2">
+                                    <span class="badge bg-danger-subtle text-danger rounded-pill px-3 py-2 fw-800 small text-uppercase">
+                                        {{ report.get_reason_display }}
+                                    </span>
+                                    <small class="text-muted fw-bold">{{ report.created_at|date:"M d, Y | H:i" }}</small>
+                                </div>
+                                <p class="mb-2 text-dark fw-500 italic" style="line-height: 1.6; font-size: 1.05rem;">"{{ report.description }}"</p>
+                                <div class="small text-muted fw-bold">
+                                    Filed by: <span class="text-primary">{{ report.reporter.name }}</span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="p-5 text-center text-muted py-5">
+                                <i class="bi bi-shield-check display-1 opacity-25 text-success"></i>
+                                <p class="mt-3 fw-bold">No active reports for this account.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="pills-reviews" role="tabpanel">
+                    <div class="card border-0 shadow-sm rounded-5 bg-white overflow-hidden">
+                        <div class="list-group list-group-flush">
+                            {% for review in reviews %}
+                            <div class="list-group-item p-4 border-bottom transition-hover">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <div class="text-warning">
+                                        {% for i in "12345"|make_list %}
+                                            {% if forloop.counter <= review.rating %}
+                                                <i class="bi bi-star-fill"></i>
+                                            {% else %}
+                                                <i class="bi bi-star"></i>
+                                            {% endif %}
+                                        {% endfor %}
+                                    </div>
+                                    <small class="text-muted fw-bold">{{ review.created_at|date:"M d, Y" }}</small>
+                                </div>
+                                <p class="mb-2 text-dark fw-500">"{{ review.comment }}"</p>
+                                <div class="small text-muted fw-bold">
+                                    Authored by: <span class="text-dark">{{ review.reviewer.name }}</span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="p-5 text-center text-muted py-5">
+                                <i class="bi bi-chat-square-text display-1 opacity-25"></i>
+                                <p class="mt-3 fw-bold">This user has no review history yet.</p>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .ls-1 { letter-spacing: 1px; }
+    .text-muted-ls { font-size: 0.65rem; color: #94a3b8; letter-spacing: 1px; }
+    .bg-light-faint { background-color: #f8fafc; }
+    .italic { font-style: italic; }
+    .shadow-glow { box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3); }
+
+    .custom-pills .nav-link { color: #64748b; transition: 0.3s; border: 1px solid transparent; }
+    .custom-pills .nav-link.active { 
+        background: #000; 
+        color: white; 
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15); 
+    }
+    
+    .transition-hover:hover { background-color: #fcfdfe; }
+    .transition { transition: all 0.2s ease; }
+    .transition:hover { transform: translateY(-2px); }
+</style>
+
+<script>
+    function confirmInvestigateAction(action) {
+        if (action === 'delete') {
+            Swal.fire({
+                title: 'Final Purge Confirmation',
+                text: "Deleting this account is permanent. All related tasks and history will be lost.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Purge Account',
+                cancelButtonText: 'Cancel',
+                background: '#fff',
+                borderRadius: '25px',
+                customClass: {
+                    title: 'fw-900 text-dark',
+                    confirmButton: 'rounded-pill px-4 fw-bold',
+                    cancelButton: 'rounded-pill px-4 fw-bold'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('investigate-delete-form').submit();
+                }
+            });
+        } else if (action === 'clear') {
+            Swal.fire({
+                title: 'Clear Reputation?',
+                text: "This will remove all complaints against this user and reset their standing.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Confirm Clear',
+                background: '#fff',
+                borderRadius: '25px',
+                customClass: {
+                    title: 'fw-900 text-dark',
+                    confirmButton: 'rounded-pill px-4 fw-bold',
+                    cancelButton: 'rounded-pill px-4 fw-bold'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById('investigate-clear-form').submit();
+                }
+            });
+        }
+    }
+</script>
+{% endblock %}

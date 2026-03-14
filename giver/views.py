@@ -22,6 +22,10 @@ from accounts.models import User
 from django.db import transaction
 from django.db.models import Avg, Count
 from accounts.models import User, UserReport
+from .utils import get_ai_recommended_doers
+from django.urls import reverse
+
+
 
 
 
@@ -457,3 +461,97 @@ def public_giver_profile(request, giver_id):
         'reviews': reviews,
     }
     return render(request, 'doer/view_giver_public.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+@login_required
+def ai_match_expert_page(request):
+    # 1. Fetch Giver's tasks that are either Open or currently Requested
+    my_tasks = Task.objects.filter(giver=request.user, status__in=['Open', 'Requested'])
+    
+    selected_task_id = request.GET.get('task_id')
+    recommendations = []
+    task = None
+    # Instead of invited_ids from a table, we check who is currently in the task.doer field
+    current_requested_doer_id = None
+
+    if selected_task_id:
+        task = get_object_or_404(Task, id=selected_task_id, giver=request.user)
+        recommendations = get_ai_recommended_doers(task) 
+        
+        # If the task is already 'Requested', identify the doer so the UI can show "Pending"
+        if task.status == 'Requested' and task.doer:
+            current_requested_doer_id = task.doer.id
+
+    # Handle the "Schedule Job" Request
+    if request.method == "POST":
+        doer_id = request.POST.get('doer_id')
+        t_id = request.POST.get('target_task_id')
+        
+        target_task = get_object_or_404(Task, id=t_id, giver=request.user)
+        doer_user = get_object_or_404(User, id=doer_id)
+        
+        # LOGIC CHANGE: Assign doer directly to Task and change status
+        target_task.doer = doer_user
+        target_task.status = 'Requested'
+        target_task.save()
+
+        messages.success(request, f"Schedule request sent to {doer_user.name}!")
+        # Use reverse to ensure the redirect path is always correct
+        return redirect(reverse('ai_match_expert_page') + f'?task_id={t_id}')
+
+    return render(request, 'giver/ai_match_page.html', {
+        'my_tasks': my_tasks,
+        'recommendations': recommendations,
+        'selected_task': task,
+        'current_requested_doer_id': current_requested_doer_id # Pass this to HTML
+    })
+
+
+
+
+@login_required
+def giver_home(request):
+    # 1. Direct Filter
+    tasks_query = Task.objects.filter(giver=request.user)
+    total_posted = tasks_query.count()
+
+    # 2. DEBUG PRINT (Check your VS Code/PyCharm terminal)
+    print(f"--- GIVER HOME DEBUG ---")
+    print(f"User: {request.user.email} (ID: {request.user.id})")
+    print(f"Count via request.user: {total_posted}")
+    
+    # 3. Fallback Check: Does the DB have ANY tasks for this user ID?
+    # This helps if request.user is somehow proxied or lazy
+    total_posted_alt = Task.objects.filter(giver_id=request.user.id).count()
+    print(f"Count via raw ID: {total_posted_alt}")
+
+    active_hired = Task.objects.filter(giver=request.user, status='Accepted').count()
+    completed_count = Task.objects.filter(giver=request.user, status='Completed').count()
+    
+    from django.db.models import Sum
+    total_spent = Task.objects.filter(giver=request.user, status='Completed').aggregate(total=Sum('budget'))['total'] or 0
+
+    recent_tasks = Task.objects.filter(giver=request.user).order_by('-created_at')[:3]
+    new_applications = TaskRequest.objects.filter(task__giver=request.user, status='Pending').select_related('doer', 'task').order_by('-created_at')[:3]
+
+    context = {
+        'total_posted': total_posted_alt, # Using the raw ID count just in case
+        'active_hired': active_hired,
+        'completed_count': completed_count,
+        'total_spent': total_spent,
+        'recent_tasks': recent_tasks,
+        'new_applications': new_applications,
+        'is_verified': request.user.approval_status == 'Approved',
+        'today': timezone.now(),
+    }
+    return render(request, 'giver/home.html', context)

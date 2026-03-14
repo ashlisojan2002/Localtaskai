@@ -11,32 +11,27 @@
     
     <style>
         :root {
-            --forest-base: #064e3b;      /* Deeper Forest */
-            --emerald-accent: #10b981;   /* Emerald Green */
-            --emerald-glow: rgba(16, 185, 129, 0.15);
-            --emerald-hover: #059669;    /* Darker Emerald */
-            --soft-emerald: #f0fdf4;     /* Ultra Light Emerald */
-            --slate-900: #0f172a;
-            --glass-bg: rgba(255, 255, 255, 0.95);
+            --main-gradient: linear-gradient(135deg, #064e3b 0%, #10b981 100%);
+            --user-gradient: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+            --emerald-main: #10b981;
+            --soft-bg: #f8fafc;
         }
 
         body {
-            background-color: #f8fafc;
+            background-color: var(--soft-bg);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            color: #1e293b;
-            letter-spacing: -0.01em;
         }
 
-        /* --- PREMIUM GIVER NAVIGATION --- */
+        /* --- VIBRANT NAVIGATION --- */
         .giver-nav {
-            background: var(--glass-bg);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border-bottom: 3px solid var(--emerald-main);
             padding: 0;
-            box-shadow: 0 4px 30px rgba(0, 0, 0, 0.03);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
             z-index: 1050;
         }
 
@@ -44,238 +39,193 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 80px;
+            height: 85px;
         }
 
+        /* --- DESIGNED LOGO --- */
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: var(--main-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+            transform: rotate(-5deg);
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #064e3b;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+
+        /* --- NAV LINKS --- */
         .nav-links-list {
             display: flex;
-            gap: 1rem;
+            gap: 5px;
             list-style: none;
             margin: 0;
             padding: 0;
-            height: 100%;
-            align-items: center;
         }
 
         .nav-links-list a {
             text-decoration: none;
-            color: #64748b;
-            font-weight: 600;
-            font-size: 0.88rem;
+            color: #475569;
+            font-weight: 700;
+            font-size: 0.75rem;
+            padding: 10px 12px;
+            border-radius: 12px;
             display: flex;
+            flex-direction: column;
             align-items: center;
-            height: 44px;
-            padding: 0 16px;
-            border-radius: 10px;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s;
         }
+
+        .nav-links-list a i { font-size: 1.2rem; margin-bottom: 3px; }
+        
+        /* Icon Colors */
+        .i-overview { color: #3b82f6; }
+        .i-post { color: #f59e0b; }
+        .i-req { color: #8b5cf6; }
+        .i-hired { color: #ec4899; }
+        .i-msg { color: #06b6d4; }
+        .i-prof { color: #6366f1; }
+        .i-verify { color: #10b981; }
 
         .nav-links-list a:hover {
-            color: var(--emerald-accent);
-            background: var(--soft-emerald);
+            background: #f1f5f9;
+            transform: translateY(-3px);
         }
 
-        .nav-links-list a.active-link {
-            color: var(--forest-base);
-            background: var(--soft-emerald);
-            box-shadow: inset 0 0 0 1px rgba(16, 185, 129, 0.1);
-            position: relative;
+        /* --- AI MATCH SPECIAL --- */
+        .ai-match-btn {
+            background: #ecfdf5 !important;
+            border: 1px solid #10b981;
+            color: #065f46 !important;
         }
 
-        /* Active Indicator Dot */
-        .nav-links-list a.active-link::after {
-            content: "";
-            position: absolute;
-            bottom: 6px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 4px;
-            height: 4px;
-            background: var(--emerald-accent);
-            border-radius: 50%;
-        }
-
-        /* Special Post Task Button Style */
-        .nav-post-task {
-            background: var(--forest-base) !important;
+        /* --- POST TASK CTA --- */
+        .post-task-cta {
+            background: var(--main-gradient) !important;
             color: white !important;
-            box-shadow: 0 4px 12px rgba(6, 78, 59, 0.2);
+            padding: 10px 20px !important;
+            border-radius: 50px !important;
+            font-weight: 800 !important;
+            font-size: 0.75rem !important;
+            box-shadow: 0 4px 15px rgba(6, 78, 59, 0.2);
         }
 
-        .nav-post-task:hover {
-            background: var(--emerald-hover) !important;
-            transform: translateY(-1px);
-        }
-
-        /* --- USER STATUS BOX --- */
-        .user-status-box {
+        /* --- NEW VIBRANT USER SECTION --- */
+        .user-zone {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            background: #ffffff;
-            padding: 6px 6px 6px 16px;
+            gap: 12px;
+            background: var(--user-gradient);
+            padding: 8px 8px 8px 18px;
             border-radius: 50px;
-            border: 1px solid var(--slate-border);
-            box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         }
 
-        .btn-logout {
-            background: #fff1f2;
-            color: #e11d48;
-            text-decoration: none;
-            font-size: 0.75rem;
-            font-weight: 800;
-            width: 38px;
-            height: 38px;
+        .user-meta {
+            text-align: right;
+            line-height: 1.2;
+        }
+
+        .logout-btn {
+            width: 42px;
+            height: 42px;
+            background: white;
+            color: #be123c;
+            border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            border-radius: 50%;
-            transition: all 0.2s;
-            border: 1px solid rgba(225, 29, 72, 0.1);
-        }
-
-        .btn-logout:hover {
-            background: #e11d48;
-            color: white;
-            transform: rotate(90deg);
-        }
-
-        /* --- MAIN WRAPPER --- */
-        .main-wrapper {
-            flex: 1;
-            padding: 3rem 0; 
-        }
-
-        /* --- FOOTER --- */
-        footer {
-            background: var(--slate-900);
-            color: #ffffff;
-            padding: 4rem 0;
-            margin-top: auto;
-            border-top: 4px solid var(--emerald-accent);
-        }
-
-        .footer-brand {
-            font-size: 1.75rem;
-            color: white;
-            font-weight: 800;
             text-decoration: none;
-            letter-spacing: -0.04em;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        .footer-brand span { color: var(--emerald-accent); }
-
-        /* Animation */
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
+        .logout-btn:hover {
+            background: #be123c;
+            color: white;
+            transform: scale(1.1) rotate(10deg);
         }
-        .main-wrapper { animation: slideUp 0.5s ease-out; }
 
-        /* Custom Scrollbar */
-        ::-webkit-scrollbar { width: 8px; }
-        ::-webkit-scrollbar-track { background: #f1f1f1; }
-        ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: var(--emerald-accent); }
+        .main-wrapper { flex: 1; padding: 2.5rem 0; }
+        footer { background: #064e3b; color: white; padding: 2.5rem 0; text-align: center; }
     </style>
 </head>
 <body>
 
     <nav class="giver-nav sticky-top">
         <div class="container nav-container">
+            <a href="{% url 'giver_home' %}" class="logo-box">
+                <div class="logo-icon">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                </div>
+                <div class="logo-text">
+                    Local<br><span style="color: var(--emerald-main)">Task</span>
+                </div>
+            </a>
+            
             <ul class="nav-links-list">
-                <li><a href="{% url 'giver_home' %}" class="{% if request.resolver_match.url_name == 'giver_home' %}active-link{% endif %}">Overview</a></li>
-                <li><a href="{% url 'my_tasks' %}" class="{% if request.resolver_match.url_name == 'my_tasks' %}active-link{% endif %}">Postings</a></li>
-                <li><a href="{% url 'manage_requests' %}" class="{% if request.resolver_match.url_name == 'manage_requests' %}active-link{% endif %}">Requests</a></li>
-                <li><a href="{% url 'giver_hired_tasks' %}" class="{% if request.resolver_match.url_name == 'giver_hired_tasks' %}active-link{% endif %}">Hired</a></li>
-                <li><a href="{% url 'post_task' %}" class="nav-post-task {% if request.resolver_match.url_name == 'post_task' %}active-link{% endif %}"><i class="bi bi-plus-lg me-2"></i>Post Task</a></li>
-                <li><a href="{% url 'giver_profile_view' %}" class="{% if request.resolver_match.url_name == 'giver_profile_view' %}active-link{% endif %}">Profile</a></li>
-                <li><a href="{% url 'giver_verification' %}" class="{% if request.resolver_match.url_name == 'giver_verification' %}active-link{% endif %}">Verification</a></li>
-                <li><a href="{% url 'giver_chat_inbox' %}" class="{% if request.resolver_match.url_name == 'giver_chat_inbox' %}active-link{% endif %}">Messages</a></li>
+                <li><a href="{% url 'giver_home' %}"><i class="bi bi-house-door-fill i-overview"></i>Overview</a></li>
+                <li><a href="{% url 'my_tasks' %}"><i class="bi bi-card-list i-post"></i>Postings</a></li>
+                <li><a href="{% url 'manage_requests' %}"><i class="bi bi-person-plus-fill i-req"></i>Requests</a></li>
+                <li><a href="{% url 'giver_hired_tasks' %}"><i class="bi bi-check-circle-fill i-hired"></i>Hired</a></li>
+                
+                {% if user.approval_status == 'Approved' %}
+                <li><a href="{% url 'ai_match_expert_page' %}" class="ai-match-btn"><i class="bi bi-robot"></i>AI Match</a></li>
+                {% else %}
+                <li style="opacity: 0.4;"><a href="#"><i class="bi bi-lock-fill"></i>AI Match</a></li>
+                {% endif %}
+
+                <li><a href="{% url 'giver_chat_inbox' %}"><i class="bi bi-chat-dots-fill i-msg"></i>Messages</a></li>
+                <li><a href="{% url 'giver_profile_view' %}"><i class="bi bi-person-badge-fill i-prof"></i>Profile</a></li>
+                <li><a href="{% url 'giver_verification' %}"><i class="bi bi-shield-check i-verify"></i>Verify</a></li>
+                
+                <li><a href="{% url 'post_task' %}" class="post-task-cta"><i class="bi bi-plus-lg me-1"></i>Post Task</a></li>
             </ul>
 
-            <div class="user-status-box" style="display: flex; align-items: center; gap: 15px;">
-    <div class="d-none d-md-block text-end" style="line-height: 1;">
-        <div style="font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; color: #1e293b; font-size: 0.85rem; margin-bottom: 2px;">
-            {{ user.username }}
+            <div class="user-zone">
+                <div class="user-meta d-none d-xl-block">
+                    <div class="fw-bold text-dark small">{{ user.username }}</div>
+                    <div style="font-size: 0.6rem; font-weight: 800; color: var(--emerald-main);">PREMIUM GIVER</div>
+                </div>
+                <a href="{% url 'logout_user' %}" class="logout-btn" title="Sign Out">
+                    <i class="bi bi-power"></i>
+                </a>
+            </div>
         </div>
-        <span style="font-size: 0.6rem; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.08em; opacity: 0.9;">
-            Authorized Giver
-        </span>
-    </div>
-
-    <div style="width: 1px; height: 28px; background-color: #e2e8f0; margin: 0 5px;" class="d-none d-md-block"></div>
-
-    <a href="{% url 'logout_user' %}" 
-       title="Logout" 
-       style="display: inline-flex; 
-              align-items: center; 
-              justify-content: center; 
-              gap: 8px; 
-              background-color: #fff1f2; 
-              color: #be123c; 
-              border: 1px solid rgba(190, 18, 60, 0.1); 
-              padding: 8px 18px; 
-              border-radius: 10px; 
-              font-weight: 800; 
-              font-size: 0.7rem; 
-              letter-spacing: 0.5px; 
-              text-decoration: none; 
-              text-transform: uppercase; 
-              transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-              box-shadow: 0 1px 2px rgba(0,0,0,0.05);"
-       onmouseover="this.style.backgroundColor='#be123c'; this.style.color='#ffffff'; this.style.boxShadow='0 4px 12px rgba(190, 18, 60, 0.15)';"
-       onmouseout="this.style.backgroundColor='#fff1f2'; this.style.color='#be123c'; this.style.boxShadow='0 1px 2px rgba(0,0,0,0.05)';"
-    >
-        <i class="bi bi-box-arrow-right" style="font-size: 0.9rem;"></i>
-        LOGOUT
-    </a>
-</div>
     </nav>
 
     <main class="main-wrapper">
-        <div class="container"> 
+        <div class="container">
             {% block content %}{% endblock %}
         </div>
     </main>
 
     <footer>
         <div class="container">
-            <div class="row align-items-center">
-                <div class="col-md-6 text-center text-md-start">
-                    <a href="#" class="footer-brand">LocalTask<span>AI</span></a>
-                    <p class="text-white-50 mt-2 mb-0">The gold standard in local task management.</p>
-                </div>
-                <div class="col-md-6 text-center text-md-end mt-4 mt-md-0">
-                    <div class="py-2 px-4 d-inline-block rounded-pill" style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
-                        <span class="small text-white-50">&copy; 2026 Giver Portal • <span class="text-emerald-accent">Emerald Secure</span></span>
-                    </div>
-                </div>
-            </div>
+            <p class="small opacity-75 mb-0">&copy; 2026 LocalTask | Smarter Connections</p>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        const globalWsScheme = window.location.protocol === "https:" ? "wss" : "ws";
-        const globalSocket = new WebSocket(`${globalWsScheme}://${window.location.host}/ws/chat/global_updates//`);
-
-        globalSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            if (data.type === 'global_unread_update') {
-                const badge = document.getElementById(`unread-badge-${data.sender_id}`);
-                if (badge) {
-                    let currentCount = parseInt(badge.innerText.trim()) || 0;
-                    badge.innerText = currentCount + 1;
-                    badge.classList.remove('d-none');
-                }
-            }
-        };
-
-        globalSocket.onclose = function(e) {
-            console.warn('Global Notification Socket closed unexpectedly');
-        };
-    </script>
 </body>
 </html>

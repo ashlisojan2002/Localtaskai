@@ -1,177 +1,210 @@
 {% extends 'giver/base_giver.html' %}
+
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
 
-<div class="container py-5">
-    <div class="card border-0 shadow-sm p-4 mx-auto" style="border-radius: 20px; max-width: 800px;">
+<div class="container py-5 animate__animated animate__fadeIn">
+    <div class="card border-0 shadow-lg mx-auto overflow-hidden v-card-main" style="border-radius: 30px; max-width: 850px;">
+        
+        <div class="p-4 text-center border-bottom bg-light-faint">
+            <h4 class="fw-900 mb-0"><i class="bi bi-shield-lock-fill text-emerald me-2"></i>Security <span class="text-gradient">Verification</span></h4>
+        </div>
 
-        <!-- SUCCESS STATE -->
-        {% if user.approval_status == 'Accepted' %}
-            <div class="text-center py-5">
-                <div class="mb-4">
-                    <i class="bi bi-patch-check-fill" style="font-size: 5rem; color: #10b981;"></i>
-                </div>
-                <h2 class="fw-bold text-dark">Giver Account Verified</h2>
-                <p class="text-muted mx-auto" style="max-width: 500px;">
-                    Your business identity has been verified. You now have full hiring privileges.
-                </p>
+        <div class="card-body p-4 p-md-5">
 
-                <div class="mt-4">
-                    <span class="badge px-4 py-2 rounded-pill" style="background-color: #10b981; color: white;">
-                        <i class="bi bi-shield-check me-2"></i>Verified Giver
-                    </span>
-                </div>
+            {% if user.approval_status == 'Accepted' %}
+                <div class="text-center py-5">
+                    <div class="success-icon-wrapper mb-4">
+                        <i class="bi bi-patch-check-fill animate__animated animate__bounceIn"></i>
+                    </div>
+                    <h2 class="fw-900 text-dark">Identity Confirmed</h2>
+                    <p class="text-muted mx-auto fw-500" style="max-width: 450px;">
+                        Your credentials have been successfully validated. You now hold <strong>Elite Giver</strong> status with full hiring privileges.
+                    </p>
 
-                <div class="mt-5">
-                    <a href="{% url 'giver_profile_view' %}" class="btn btn-dark px-5 py-2 rounded-pill fw-bold">
-                        View Profile
-                    </a>
-                </div>
-            </div>
+                    <div class="verified-pill mt-4 d-inline-flex align-items-center">
+                        <i class="bi bi-shield-check me-2"></i> Authorized Giver Account
+                    </div>
 
-
-        <!-- UNDER REVIEW STATE -->
-        {% elif user.approval_status == 'Under Review' %}
-            <h2 class="fw-bold mb-4 text-center">Identity Verification</h2>
-
-            <div class="text-center py-4">
-                <i class="bi bi-hourglass-split text-primary" style="font-size: 3rem;"></i>
-                <h3 class="fw-bold mt-2">Under Review</h3>
-                <p class="text-muted">We are currently reviewing your Giver credentials.</p>
-                <hr>
-            </div>
-
-            <div class="row g-4 text-center">
-                <div class="col-md-6">
-                    <label class="fw-bold small text-uppercase text-muted d-block mb-2">Submitted ID</label>
-                    {% if user.adhar_photo %}
-                        <img src="{{ user.adhar_photo.url }}" class="img-fluid rounded border shadow-sm"
-                             style="max-height: 180px; width: 100%; object-fit: cover;">
-                    {% endif %}
-                </div>
-
-                <div class="col-md-6">
-                    <label class="fw-bold small text-uppercase text-muted d-block mb-2">Security Photo</label>
-                    {% if user.verification_live_photo %}
-                        <img src="{{ user.verification_live_photo.url }}" class="img-fluid rounded border shadow-sm"
-                             style="max-height: 180px; width: 100%; object-fit: cover;">
-                    {% endif %}
-                </div>
-            </div>
-
-            <div class="text-center mt-5">
-                <p class="small text-muted">Review usually takes 24–48 hours.</p>
-                <a href="{% url 'giver_profile_view' %}"
-                   class="btn btn-outline-secondary btn-sm px-4 rounded-pill">
-                    Back to Profile
-                </a>
-            </div>
-
-
-        <!-- REJECTED OR NEW SUBMISSION -->
-        {% else %}
-            <h2 class="fw-bold mb-4 text-center">Identity Verification</h2>
-
-            {% if user.approval_status == 'Rejected' %}
-                <div class="alert alert-danger rounded-4 shadow-sm mb-4 d-flex align-items-center">
-                    <i class="bi bi-exclamation-triangle-fill fs-3 me-3"></i>
-                    <div>
-                        <div class="fw-bold">Verification Rejected</div>
-                        <div class="small">
-                            Please ensure your documents are clear and re-submit.
-                        </div>
-                        <div class="small text-muted mt-1">
-                            Attempt {{ user.verification_attempts }} of 3
-                        </div>
+                    <div class="mt-5">
+                        <a href="{% url 'giver_profile_view' %}" class="btn btn-emerald-gradient px-5 py-3 rounded-pill fw-800 shadow-glow transition">
+                            Enter Dashboard
+                        </a>
                     </div>
                 </div>
-            {% endif %}
 
-            <!-- 🚫 BLOCK AFTER 3 FAILURES -->
-            {% if user.verification_attempts >= 3 and user.approval_status == 'Rejected' %}
+            {% elif user.approval_status == 'Under Review' %}
+                <div class="text-center py-5">
+                    <div class="review-loader mb-4 mx-auto">
+                        <i class="bi bi-fingerprint"></i>
+                    </div>
+                    <h3 class="fw-900 mt-2">Authentication in Progress</h3>
+                    <p class="text-muted fw-500">Our security team is currently validating your provided documentation.</p>
+                    
+                    <div class="row g-4 mt-4 px-md-4">
+                        <div class="col-6">
+                            <div class="doc-preview-card">
+                                <span class="doc-label">GOVERNMENT ID</span>
+                                {% if user.adhar_photo %}
+                                    <img src="{{ user.adhar_photo.url }}" class="rounded shadow-sm">
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="doc-preview-card">
+                                <span class="doc-label">BIOMETRIC MATCH</span>
+                                {% if user.verification_live_photo %}
+                                    <img src="{{ user.verification_live_photo.url }}" class="rounded shadow-sm">
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
 
-                <div class="alert alert-danger text-center rounded-4 shadow-sm">
-                    <h5 class="fw-bold mb-2">3 Verification Attempts Failed</h5>
-                    <p class="small mb-0">
-                        You have reached the maximum number of verification attempts.
-                        Your account cannot be verified further.
-                    </p>
+                    <div class="mt-5 pt-3">
+                        <div class="spinner-border spinner-border-sm text-primary me-2" role="status"></div>
+                        <span class="small text-muted fw-bold">ETA: 24–48 Hours for full clearance</span>
+                        <div class="mt-4">
+                            <a href="{% url 'giver_profile_view' %}" class="btn btn-outline-secondary rounded-pill px-4 fw-800 btn-sm">Return to Hub</a>
+                        </div>
+                    </div>
                 </div>
 
             {% else %}
+                
+                {% if user.approval_status == 'Rejected' %}
+                    <div class="alert alert-danger border-0 rounded-4 shadow-sm mb-4 p-3 animate__animated animate__shakeX">
+                        <div class="d-flex align-items-center">
+                            <i class="bi bi-shield-exclamation fs-2 me-3"></i>
+                            <div>
+                                <h6 class="fw-900 mb-0">Verification Failed</h6>
+                                <p class="small mb-0 opacity-75">Documentation was unclear or mismatched. Please re-upload high-quality images.</p>
+                                <div class="badge bg-danger-subtle text-danger mt-1">Attempt {{ user.verification_attempts }} of 3</div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
 
-            <!-- FORM START -->
-            <form method="POST" enctype="multipart/form-data" id="vform">
-                {% csrf_token %}
+                {% if user.verification_attempts >= 3 and user.approval_status == 'Rejected' %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-x-octagon-fill text-danger display-1 mb-3"></i>
+                        <h4 class="fw-900">Access Restricted</h4>
+                        <p class="text-muted">Maximum verification attempts reached. Please contact corporate support for manual identity resolution.</p>
+                        <button class="btn btn-dark rounded-pill px-5">Contact Support</button>
+                    </div>
+                {% else %}
 
-                <div class="row g-3 mb-3">
-                    <div class="col-md-6">
-                        <label class="fw-bold small mb-1 text-muted">AADHAAR CARD (IMAGE)</label>
-                        <input type="file" name="aadhaar_photo_file"
-                               class="form-control" accept="image/*" required>
+                <form method="POST" enctype="multipart/form-data" id="vform">
+                    {% csrf_token %}
+
+                    <div class="row g-4 mb-5">
+                        <div class="col-md-6">
+                            <div class="upload-zone rounded-4 p-4 text-center transition">
+                                <label class="fw-800 small d-block mb-3 text-emerald text-uppercase ls-1">Aadhaar Card (Front)</label>
+                                <input type="file" name="aadhaar_photo_file" class="form-control custom-file-input" accept="image/*" required>
+                                <i class="bi bi-card-image mt-2 d-block opacity-50"></i>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="upload-zone rounded-4 p-4 text-center transition">
+                                <label class="fw-800 small d-block mb-3 text-emerald text-uppercase ls-1">Address Proof</label>
+                                <input type="file" name="non_criminal_certificate" class="form-control custom-file-input" required>
+                                <i class="bi bi-file-earmark-text mt-2 d-block opacity-50"></i>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="col-md-6">
-                        <label class="fw-bold small mb-1 text-muted">ADDRESS  PROOF</label>
-                        <input type="file" name="non_criminal_certificate"
-                               class="form-control" required>
-                    </div>
-                </div>
-
-                <div class="mb-4">
-                    <label class="fw-bold small d-block mb-2 text-muted text-center">
-                        LIVE PHOTO CAPTURE
-                    </label>
-
-                    <div class="position-relative bg-dark rounded-4 overflow-hidden"
-                         style="min-height: 350px;">
-                        <video id="video" width="100%" autoplay playsinline
-                               style="object-fit: cover; min-height: 350px;"></video>
-
-                        <img id="photo_preview"
-                             style="display:none; width:100%; height:auto;">
-
-                        <div id="flash"
-                             style="position:absolute; top:0; left:0; width:100%; height:100%;
-                             background:white; display:none; opacity:0.8;"></div>
+                    <div class="camera-container rounded-5 overflow-hidden shadow-inner mb-4 position-relative">
+                        <div class="scanner-line"></div>
+                        <video id="video" width="100%" autoplay playsinline class="bg-dark"></video>
+                        <img id="photo_preview" style="display:none; width:100%; height:auto;" class="animate__animated animate__fadeIn">
+                        
+                        <div class="camera-overlay top-left"></div>
+                        <div class="camera-overlay top-right"></div>
+                        <div class="camera-overlay bottom-left"></div>
+                        <div class="camera-overlay bottom-right"></div>
+                        
+                        <div id="flash" class="flash-effect"></div>
                     </div>
 
-                    <div class="mt-3 text-center">
-                        <button type="button" id="btn_capture"
-                                class="btn btn-dark px-4 py-2"
-                                onclick="capturePhoto()">
-                            <i class="bi bi-camera-fill me-2"></i>Take Photo
+                    <div class="text-center mb-5">
+                        <button type="button" id="btn_capture" class="btn btn-dark btn-capture shadow-lg px-5 py-3 rounded-pill fw-800 transition" onclick="capturePhoto()">
+                            <i class="bi bi-camera-fill me-2"></i>Capture Biometric Photo
                         </button>
 
                         <div id="after_capture" style="display: none;">
-                            <button type="button"
-                                    class="btn btn-outline-danger btn-sm px-4 rounded-pill"
-                                    onclick="retakePhoto()">
-                                Retake
+                            <button type="button" class="btn btn-outline-danger px-4 rounded-pill fw-800" onclick="retakePhoto()">
+                                <i class="bi bi-arrow-counterclockwise"></i> Retake Photo
                             </button>
                         </div>
                     </div>
-                </div>
 
-                <input type="hidden" name="live_photo_data"
-                       id="live_photo_data" required>
+                    <input type="hidden" name="live_photo_data" id="live_photo_data" required>
+                    <canvas id="canvas" width="640" height="480" style="display:none;"></canvas>
 
-                <canvas id="canvas" width="640" height="480"
-                        style="display:none;"></canvas>
-
-                <button type="submit"
-                        class="btn btn-lg w-100 fw-bold py-3 text-white"
-                        style="border-radius: 15px; background: #10b981;">
-                    Submit for Verification
-                </button>
-            </form>
-            <!-- FORM END -->
-
+                    <button type="submit" class="btn btn-emerald-gradient w-100 py-3 rounded-4 fw-900 fs-5 shadow-glow transition mt-3">
+                        <i class="bi bi-cloud-arrow-up-fill me-2"></i>Submit Security Dossier
+                    </button>
+                </form>
+                {% endif %}
             {% endif %}
-        {% endif %}
+        </div>
     </div>
 </div>
 
+<style>
+    :root {
+        --emerald-accent: #10b981;
+        --emerald-dark: #064e3b;
+        --main-gradient: linear-gradient(135deg, #064e3b 0%, #10b981 100%);
+    }
+
+    .fw-900 { font-weight: 900; }
+    .fw-800 { font-weight: 800; }
+    .ls-1 { letter-spacing: 1px; }
+    .text-gradient { background: var(--main-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+    .v-card-main { background: #ffffff; border: 1px solid rgba(0,0,0,0.05); }
+    .bg-light-faint { background: #f8fafc; }
+
+    /* Verification Success Styles */
+    .success-icon-wrapper { font-size: 6rem; color: var(--emerald-accent); text-shadow: 0 10px 20px rgba(16, 185, 129, 0.2); }
+    .verified-pill { background: #ecfdf5; color: #065f46; padding: 10px 25px; border-radius: 50px; font-weight: 800; font-size: 0.9rem; border: 1px solid #10b981; }
+
+    /* Review Styles */
+    .review-loader { font-size: 4rem; color: #3b82f6; width: 100px; height: 100px; border-radius: 50%; background: #eff6ff; display: flex; align-items: center; justify-content: center; animation: pulse 2s infinite; }
+    .doc-preview-card { background: #f1f5f9; padding: 10px; border-radius: 15px; }
+    .doc-preview-card img { height: 150px; width: 100%; object-fit: cover; border-radius: 10px; }
+    .doc-label { font-size: 0.6rem; font-weight: 900; color: #64748b; display: block; margin-bottom: 5px; }
+
+    /* Upload Zones */
+    .upload-zone { background: #f9fbff; border: 2px dashed #e2e8f0; }
+    .upload-zone:hover { border-color: var(--emerald-accent); background: #f0fdf4; }
+
+    /* Camera Interface */
+    .camera-container { background: #000; min-height: 400px; border: 4px solid #f1f5f9; }
+    .scanner-line { position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--emerald-accent); box-shadow: 0 0 15px var(--emerald-accent); z-index: 10; animation: scan 3s linear infinite; }
+    @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+    
+    .camera-overlay { position: absolute; width: 40px; height: 40px; border: 4px solid var(--emerald-accent); z-index: 5; opacity: 0.6; }
+    .top-left { top: 20px; left: 20px; border-right: 0; border-bottom: 0; }
+    .top-right { top: 20px; right: 20px; border-left: 0; border-bottom: 0; }
+    .bottom-left { bottom: 20px; left: 20px; border-right: 0; border-top: 0; }
+    .bottom-right { bottom: 20px; right: 20px; border-left: 0; border-top: 0; }
+
+    .flash-effect { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fff; display: none; z-index: 20; }
+
+    /* Buttons */
+    .btn-emerald-gradient { background: var(--main-gradient); color: #fff; }
+    .shadow-glow { box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3); }
+    .transition { transition: all 0.3s ease; }
+    .btn-capture:hover { transform: scale(1.05); background: #000; }
+
+    @keyframes pulse { 0% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1); opacity: 1; } 100% { transform: scale(0.95); opacity: 0.8; } }
+</style>
+
 <script>
+    // Logic kept identical to original code
     const video = document.getElementById('video');
     const preview = document.getElementById('photo_preview');
     const btnCapture = document.getElementById('btn_capture');
@@ -181,11 +214,11 @@
 
     if (video) {
         navigator.mediaDevices.getUserMedia({
-            video: { facingMode: "user" }
+            video: { facingMode: "user", width: 1280, height: 720 }
         })
         .then(stream => { video.srcObject = stream; })
         .catch(() => {
-            alert("Camera access denied or not available.");
+            alert("Security Protocol Error: Camera access required for identity verification.");
         });
     }
 
@@ -193,8 +226,9 @@
         const canvas = document.getElementById('canvas');
         const context = canvas.getContext('2d');
 
+        // Visual flash feedback
         flash.style.display = 'block';
-        setTimeout(() => { flash.style.display = 'none'; }, 100);
+        setTimeout(() => { flash.style.display = 'none'; }, 150);
 
         context.drawImage(video, 0, 0, 640, 480);
         const data = canvas.toDataURL('image/png');
@@ -205,6 +239,7 @@
         preview.style.display = 'block';
         btnCapture.style.display = 'none';
         afterCapture.style.display = 'block';
+        document.querySelector('.scanner-line').style.display = 'none';
     }
 
     function retakePhoto() {
@@ -213,17 +248,22 @@
         preview.style.display = 'none';
         btnCapture.style.display = 'inline-block';
         afterCapture.style.display = 'none';
+        document.querySelector('.scanner-line').style.display = 'block';
     }
 
     const form = document.getElementById('vform');
     if (form) {
         form.onsubmit = function(e) {
             if (!liveInput.value) {
-                alert("Please take a live photo first.");
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Biometric Required',
+                    text: 'Please capture a live security photo before submission.',
+                    confirmButtonColor: '#10b981'
+                });
                 e.preventDefault();
             }
         };
     }
 </script>
-
 {% endblock %}

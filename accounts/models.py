@@ -2,6 +2,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.db import models
 from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db.models import Count
 
 class User(AbstractUser):
     # Registration Fields
@@ -66,3 +69,4 @@ class UserReport(models.Model):
 
     def __str__(self):
         return f"Report against {self.reported_user.email} by {self.reporter.email}"
+    

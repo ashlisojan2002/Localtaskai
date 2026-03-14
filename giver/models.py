@@ -5,9 +5,11 @@ from django.utils.dateparse import parse_datetime # Added this
 from adminpanel.models import District, Place, Pincode, Category, Skill
 
 
+
 class Task(models.Model):
     STATUS_CHOICES = [
         ('Open', 'Open'),
+        ('Requested', 'Requested'),
         ('Accepted', 'Accepted'),
         ('Completed', 'Completed'),
         ('Cancelled', 'Cancelled'),
@@ -83,3 +85,4 @@ class Review(models.Model):
         reviewer_name = getattr(self.reviewer, 'name', self.reviewer.email)
         reviewee_name = getattr(self.reviewee, 'name', self.reviewee.email)
         return f"Review from {reviewer_name} to {reviewee_name} for {self.task.title}"
+

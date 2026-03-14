@@ -1,0 +1,209 @@
+{% extends 'adminpanel/base_admin.html' %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+    
+    <div class="row mb-5 align-items-center">
+        <div class="col-md-8">
+            <h2 class="fw-900 text-dark mb-1">Enforcement <span class="text-danger">Command Center</span></h2>
+            <p class="text-muted fw-bold mb-0">
+                <i class="bi bi-shield-fill-exclamation text-danger me-1"></i> 
+                Auto-Enforcement: <span class="text-danger">5+ Reports = Automatic Purge</span>.
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div class="glass-pill px-4 py-2 border shadow-sm d-inline-block bg-white rounded-pill">
+                <span class="text-muted small fw-800 text-uppercase">Flagged Users:</span>
+                <span class="text-danger fw-900 ms-2 fs-5">{{ reported_users.count }}</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-lg rounded-5 overflow-hidden bg-white">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="bg-light">
+                    <tr>
+                        <th class="ps-4 py-3 text-uppercase small fw-800 text-muted">User Identity</th>
+                        <th class="py-3 text-uppercase small fw-800 text-muted text-center">Type</th>
+                        <th class="py-3 text-uppercase small fw-800 text-muted text-center">Load</th>
+                        <th class="py-3 text-uppercase small fw-800 text-muted pe-4 text-end">Control Panel</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in reported_users %}
+                    <tr class="{% if user.report_count >= 4 %}bg-red-faint{% endif %}">
+                        <td class="ps-4 py-4">
+                            <div class="d-flex align-items-center">
+                                <div class="position-relative me-3">
+                                    {% if user.photo %}
+                                        <img src="{{ user.photo.url }}" class="rounded-circle border border-2 border-white shadow-sm" width="50" height="50" style="object-fit: cover;">
+                                    {% else %}
+                                        <div class="rounded-circle bg-emerald-gradient text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 50px; height: 50px; font-weight: 800;">
+                                            {{ user.name|slice:":1" }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <div class="fw-900 text-dark mb-0 fs-6">{{ user.name }}</div>
+                                    <div class="text-muted small fw-bold">{{ user.email }}</div>
+                                </div>
+                            </div>
+                        </td>
+
+                        <td class="text-center">
+                            <span class="badge bg-light text-dark border rounded-pill px-3 py-2 fw-800 small">{{ user.role|upper }}</span>
+                        </td>
+
+                        <td class="text-center">
+                            <div class="fw-900 fs-4 {% if user.report_count >= 3 %}text-danger{% else %}text-warning{% endif %}">
+                                {{ user.report_count }}<span class="text-muted fs-6 fw-bold">/5</span>
+                            </div>
+                        </td>
+
+                        <td class="pe-4 text-end">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="{% url 'admin_investigate_user' user.id %}" class="btn btn-dark btn-sm rounded-pill px-3 fw-800 shadow-sm transition">
+                                    <i class="bi bi-search me-1"></i> Investigate
+                                </a>
+
+                                <button class="btn btn-light btn-sm rounded-pill px-3 fw-800 shadow-sm transition" type="button" data-bs-toggle="collapse" data-bs-target="#reasons-{{ user.id }}">
+                                    Evidence
+                                </button>
+
+                                <button type="button" class="btn btn-soft-success btn-sm rounded-pill px-3 fw-800 transition" 
+                                        onclick="confirmAction('clear', '{{ user.id }}', '{{ user.name }}')">
+                                    Clear
+                                </button>
+
+                                <button type="button" class="btn btn-danger btn-sm rounded-pill px-3 fw-800 shadow-sm transition" 
+                                        onclick="confirmAction('delete', '{{ user.id }}', '{{ user.name }}')">
+                                    Delete
+                                </button>
+
+                                <form id="form-clear-{{ user.id }}" method="POST" style="display:none;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <input type="hidden" name="action" value="clear">
+                                </form>
+                                <form id="form-delete-{{ user.id }}" method="POST" style="display:none;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="user_id" value="{{ user.id }}">
+                                    <input type="hidden" name="action" value="delete">
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr class="collapse border-0" id="reasons-{{ user.id }}">
+                        <td colspan="4" class="p-0 border-0">
+                            <div class="p-4 bg-light-faint border-top border-bottom">
+                                <h6 class="fw-800 text-muted small text-uppercase mb-3 px-2">Detailed Testimonials</h6>
+                                <div class="row px-2">
+                                    {% for report in user.reports_received.all %}
+                                    <div class="col-md-6 mb-3">
+                                        <div class="p-3 bg-white rounded-4 border shadow-sm">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="badge bg-warning-subtle text-warning rounded-pill px-3 fw-800">{{ report.get_reason_display }}</span>
+                                                <small class="text-muted fw-bold">From: {{ report.reporter.name }}</small>
+                                            </div>
+                                            <p class="mb-0 text-dark small fw-500 italic">"{{ report.description }}"</p>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="text-center py-5">
+                            <div class="py-5">
+                                <i class="bi bi-shield-check display-1 text-success opacity-25"></i>
+                                <h4 class="fw-900 text-dark mt-3">Community Integrity Maintained</h4>
+                                <p class="fw-bold text-muted">No flagged accounts requiring review.</p>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-900 { font-weight: 900 !important; }
+    .fw-800 { font-weight: 800 !important; }
+    .fw-500 { font-weight: 500 !important; }
+    .italic { font-style: italic; }
+    .bg-light-faint { background-color: #f8fafc; }
+    .bg-red-faint { background-color: #fff1f2 !important; }
+    .bg-emerald-gradient { background: var(--main-gradient); }
+    .btn-soft-success { background: #ecfdf5; color: #10b981; border: 1px solid #d1fae5; }
+    .btn-soft-success:hover { background: #10b981; color: #fff; }
+    .transition { transition: all 0.2s ease; }
+    .transition:hover { transform: translateY(-2px); }
+    .glass-pill { background: rgba(255,255,255,0.9); backdrop-filter: blur(8px); }
+</style>
+
+<script>
+    // High-End Alert Controller
+    function confirmAction(type, userId, userName) {
+        if (type === 'delete') {
+            Swal.fire({
+                title: 'Purge Account?',
+                text: `You are about to permanently remove ${userName}. This action cannot be undone!`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: '<i class="bi bi-trash-fill"></i> Yes, Delete Account',
+                cancelButtonText: 'Cancel',
+                background: '#fff',
+                borderRadius: '20px',
+                customClass: {
+                    title: 'fw-900 text-dark',
+                    confirmButton: 'rounded-pill px-4 fw-bold',
+                    cancelButton: 'rounded-pill px-4 fw-bold'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`form-delete-${userId}`).submit();
+                }
+            });
+        } else if (type === 'clear') {
+            Swal.fire({
+                title: 'Clear Records?',
+                text: `This will reset the report count for ${userName} and mark them as clean.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#10b981',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Yes, Clear Reports',
+                cancelButtonText: 'Not Now',
+                borderRadius: '20px',
+                customClass: {
+                    title: 'fw-900 text-dark',
+                    confirmButton: 'rounded-pill px-4 fw-bold',
+                    cancelButton: 'rounded-pill px-4 fw-bold'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    document.getElementById(`form-clear-${userId}`).submit();
+                }
+            });
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        var collapseElementList = [].slice.call(document.querySelectorAll('.collapse'))
+        var collapseList = collapseElementList.map(function (collapseEl) {
+          return new bootstrap.Collapse(collapseEl, { toggle: false })
+        })
+    });
+</script>
+{% endblock %}

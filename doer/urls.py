@@ -28,4 +28,9 @@ urlpatterns = [
     # URL for the single-page skill and location management
 path('manage-preferences/<int:user_id>/', views.manage_doer_preferences, name='manage_preferences'),
 path('view-doer/<int:doer_id>/', views.public_doer_profile, name='public_doer_profile'),
+
+
+
+path('job-requests/', views.doer_job_requests, name='doer_job_requests'),
+path('respond-request/<int:task_id>/<str:action>/', views.respond_to_request, name='respond_to_request'),
 ]

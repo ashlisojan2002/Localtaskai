@@ -20,6 +20,7 @@ from django.http import JsonResponse
 from django.db import transaction
 from django.db.models import Avg, Count
 from accounts.models import User, UserReport
+from giver.models import Task
 
 User = get_user_model()
 from django.db.models import Q
@@ -533,3 +534,43 @@ def public_doer_profile(request, doer_id):
         'locations': locations,
     }
     return render(request, 'giver/view_doer_public.html', context)
+
+
+
+
+
+
+
+
+
+
+@login_required
+def doer_job_requests(request):
+    """View for Doers to see tasks where a Giver specifically requested them."""
+    # We filter the Task model directly
+    requests = Task.objects.filter(
+        doer=request.user, 
+        status='Requested'
+    ).select_related('giver')
+    
+    return render(request, 'doer/job_requests.html', {'requests': requests})
+
+@login_required
+def respond_to_request(request, task_id, action):
+    """Logic to Accept or Decline the AI Match request."""
+    task = get_object_or_404(Task, id=task_id, doer=request.user, status='Requested')
+
+    if action == 'confirm':
+        # Handshake accepted
+        task.status = 'Accepted'
+        task.save()
+        messages.success(request, f"You have officially accepted the task: {task.title}")
+    
+    elif action == 'cancel':
+        # Handshake declined - RESET THE TASK
+        task.doer = None  # Remove the connection to this doer
+        task.status = 'Open'  # Make it visible to everyone again
+        task.save()
+        messages.info(request, "You declined the request. The task is now Open for others.")
+
+    return redirect('doer_job_requests')

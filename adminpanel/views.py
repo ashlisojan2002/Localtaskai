@@ -1,5 +1,5 @@
 from django.contrib.auth.decorators import user_passes_test
-from accounts.models import User
+from accounts.models import User,UserReport
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
 from django.urls import reverse
@@ -8,6 +8,11 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import District, Place, Pincode
 from .models import Category, Skill
 from giver.models import Task
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from django.db.models import Count
+from django.db.models import Avg, Count
+from giver.models import Review  # Ensure this path matches where your Review model is
 
 
 # Security: Only allow Superusers to see this page
@@ -198,3 +203,89 @@ def admin_delete_task(request, pk):
     task.delete()
     return redirect('admin_task_management')
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+@user_passes_test(is_admin)
+def admin_report_center(request):
+    """
+    Main Enforcement List.
+    - Purges users with 5+ reports automatically.
+    - Links to the INTERNAL investigation page.
+    """
+    # 1. AUTO-PURGE LOGIC (Threshold of 5)
+    bad_users = User.objects.annotate(r_count=Count('reports_received')).filter(r_count__gte=5)
+    for user in bad_users:
+        user.delete()
+
+    # 2. HANDLE QUICK ACTIONS FROM LIST
+    if request.method == "POST":
+        target_id = request.POST.get('user_id')
+        action = request.POST.get('action')
+        target_user = get_object_or_404(User, id=target_id)
+
+        if action == "delete":
+            target_user.delete()
+            messages.success(request, "Account purged.")
+        elif action == "clear":
+            UserReport.objects.filter(reported_user=target_user).delete()
+            messages.success(request, "Reports cleared.")
+        return redirect('admin_report_center')
+
+    # 3. GET DATA
+    reported_users = User.objects.annotate(
+        report_count=Count('reports_received')
+    ).filter(report_count__gt=0).order_by('-report_count')
+
+    return render(request, 'adminpanel/report_center.html', {'reported_users': reported_users})
+@user_passes_test(is_admin)
+def admin_investigate_user(request, user_id):
+    """
+    The NEW Dedicated Investigation Page.
+    Now correctly fetches reputation stats and reviews.
+    """
+    target_user = get_object_or_404(User, id=user_id)
+    
+    # 1. Fetch Reports
+    reports = UserReport.objects.filter(reported_user=target_user).select_related('reporter').order_by('-created_at')
+    
+    # 2. Fetch Reviews (Reputation)
+    # We fetch reviews where the target_user is the 'reviewee'
+    reviews = Review.objects.filter(reviewee=target_user).select_related('reviewer').order_by('-created_at')
+    
+    # 3. Calculate Stats
+    stats = reviews.aggregate(
+        avg=Avg('rating'), 
+        count=Count('id')
+    )
+
+    # 4. Handle POST actions (Clear/Delete)
+    if request.method == "POST":
+        action = request.POST.get('action')
+        if action == "delete":
+            target_user.delete()
+            messages.success(request, "Account purged.")
+            return redirect('admin_report_center')
+        elif action == "clear":
+            reports.delete()
+            messages.success(request, "Reports cleared.")
+            return redirect('admin_investigate_user', user_id=user_id)
+
+    return render(request, 'adminpanel/investigate_user.html', {
+        'target_user': target_user,
+        'reports': reports,
+        'report_count': reports.count(),
+        'reviews': reviews,                         # Added this
+        'avg_rating': stats['avg'] or 0,           # Added this
+        'total_reviews': stats['count'] or 0       # Added this
+    })
