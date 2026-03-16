@@ -3,6 +3,32 @@ Django settings for localtaskai project.
 Updated: Removed OTP and Email configurations.
 """
 
+
+import ssl
+import warnings
+
+# --- Python 3.13 SSL FIX ---
+# This forces Python to stop being "Strict" about certificates for local development
+_original_create_default_context = ssl.create_default_context
+
+def relaxed_create_default_context(*args, **kwargs):
+    ctx = _original_create_default_context(*args, **kwargs)
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    # This specifically fixes the "Basic Constraints" error in Python 3.13
+    if hasattr(ssl, 'VERIFY_X509_STRICT'):
+        ctx.verify_flags &= ~ssl.VERIFY_X509_STRICT
+    return ctx
+
+ssl.create_default_context = relaxed_create_default_context
+# ---------------------------
+
+
+
+
+
+
+
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -144,3 +170,17 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
+# settings.py
+
+
+
+# Updated Email Configuration
+# Updated Email Configuration for LocalTaskAI
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True  # Use TLS with Port 587
+EMAIL_HOST_USER = 'localtaskai@gmail.com'
+EMAIL_HOST_PASSWORD = 'zzxm ijtj ubfx rwqv'
+
+

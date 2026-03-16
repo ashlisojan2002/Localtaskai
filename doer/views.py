@@ -24,6 +24,7 @@ from giver.models import Task
 
 User = get_user_model()
 from django.db.models import Q
+from django.db.models import Sum
 
 
 @login_required
@@ -574,3 +575,61 @@ def respond_to_request(request, task_id, action):
         messages.info(request, "You declined the request. The task is now Open for others.")
 
     return redirect('doer_job_requests')
+
+
+
+
+
+
+
+@login_required
+def doer_home(request):
+    """
+    High-End Dashboard for Doers:
+    - Calculates total earnings from completed tasks.
+    - Counts active applications and current hired jobs.
+    - Provides a quick-view of the latest chat messages.
+    """
+    user = request.user
+
+    # 1. Dashboard Stats
+    # Count of tasks where they are currently hired (Accepted)
+    active_jobs_count = Task.objects.filter(doer=user, status='Accepted').count()
+    
+    # Count of pending applications they've sent
+    pending_apps_count = TaskRequest.objects.filter(doer=user, status='Pending').count()
+    
+    # Total earnings (Sum of budget of completed tasks)
+    total_earnings = Task.objects.filter(
+        doer=user, 
+        status='Completed'
+    ).aggregate(total=Sum('budget'))['total'] or 0
+
+    # 2. Performance Data
+    rating_data = Review.objects.filter(reviewee=user).aggregate(
+        avg=Avg('rating'), 
+        count=Count('id')
+    )
+
+    # 3. Current Work List (Limit to top 3)
+    current_work = Task.objects.filter(
+        doer=user, 
+        status='Accepted'
+    ).select_related('giver', 'category').order_by('deadline_datetime')[:3]
+
+    # 4. Recent Messages Logic
+    recent_chats = Message.objects.filter(receiver=user, is_seen=False).select_related('sender').order_by('-timestamp')[:5]
+
+    context = {
+        'active_jobs_count': active_jobs_count,
+        'pending_apps_count': pending_apps_count,
+        'total_earnings': total_earnings,
+        'avg_rating': rating_data['avg'] or 0,
+        'total_reviews': rating_data['count'],
+        'current_work': current_work,
+        'recent_chats': recent_chats,
+        # Check if user has skills/locations set up for AI matching
+        'has_preferences': DoerSkill.objects.filter(user=user).exists()
+    }
+    
+    return render(request, 'doer/home.html', context)

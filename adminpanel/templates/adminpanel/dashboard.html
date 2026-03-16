@@ -1,53 +1,115 @@
 {% extends 'adminpanel/base_admin.html' %}
 
 {% block content %}
-<div class="row">
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-                <div class="d-flex align-items-center">
-                    <div class="bg-primary bg-opacity-10 p-3 rounded-3 me-3">
-                        <i class="bi bi-people-fill text-primary fs-3"></i>
-                    </div>
-                    <div>
-                        <h6 class="text-muted mb-1">Total Users</h6>
-                        <h3 class="fw-bold mb-0">{{ total_users }}</h3>
-                    </div>
+<div class="container-fluid animate__animated animate__fadeIn">
+
+    <div class="row g-4 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-5 bg-dark text-white p-2">
+                <div class="card-body text-center">
+                    <h6 class="text-uppercase fw-800 smaller opacity-50 mb-1">Total Infrastructure</h6>
+                    <h1 class="display-4 fw-900 mb-0">{{ total_users }}</h1>
+                    <p class="small mb-0 opacity-75">Registered Users</p>
                 </div>
             </div>
         </div>
-    </div>
-    
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-                <div class="d-flex align-items-center">
-                    <div class="bg-success bg-opacity-10 p-3 rounded-3 me-3">
-                        <i class="bi bi-person-up text-success fs-3"></i>
-                    </div>
+        <div class="col-md-8">
+            <div class="card border-0 shadow-sm rounded-5 bg-white h-100 border-start border-5 border-warning">
+                <div class="card-body d-flex align-items-center justify-content-between px-4">
                     <div>
-                        <h6 class="text-muted mb-1">Total Givers</h6>
-                        <h3 class="fw-bold mb-0">{{ total_givers }}</h3>
+                        <h4 class="fw-800 text-dark mb-1">Under Review</h4>
+                        <p class="text-muted mb-0 fw-600">Verification requests pending your approval</p>
+                    </div>
+                    <div class="text-end">
+                        <h1 class="fw-900 text-warning mb-0">{{ under_review_users }}</h1>
+                        <a href="{% url 'admin_user_management' %}?status=Under Review" class="btn btn-warning btn-sm rounded-pill px-3 fw-bold">Process Now</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="col-xl-3 col-md-6 mb-4">
-        <div class="card border-0 shadow-sm rounded-4">
-            <div class="card-body p-4">
-                <div class="d-flex align-items-center">
-                    <div class="bg-info bg-opacity-10 p-3 rounded-3 me-3">
-                        <i class="bi bi-person-workspace text-info fs-3"></i>
+    <div class="row g-4 mb-4">
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-5 bg-white border-top border-5 border-success">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-4">
+                        <h6 class="fw-800 text-muted">GIVER NETWORK</h6>
+                        <i class="bi bi-person-up text-success fs-4"></i>
                     </div>
-                    <div>
-                        <h6 class="text-muted mb-1">Total Doers</h6>
-                        <h3 class="fw-bold mb-0">{{ total_doers }}</h3>
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <h3 class="fw-900 mb-0">{{ no_of_givers }}</h3>
+                            <small class="text-muted fw-700 smaller text-uppercase">Total Givers</small>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="fw-900 mb-0 text-success">{{ verified_givers }}</h3>
+                            <small class="text-muted fw-700 smaller text-uppercase">Verified</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card border-0 shadow-sm rounded-5 bg-white border-top border-5 border-primary">
+                <div class="card-body p-4">
+                    <div class="d-flex justify-content-between mb-4">
+                        <h6 class="fw-800 text-muted">DOER NETWORK</h6>
+                        <i class="bi bi-person-workspace text-primary fs-4"></i>
+                    </div>
+                    <div class="row text-center">
+                        <div class="col-6 border-end">
+                            <h3 class="fw-900 mb-0">{{ no_of_doers }}</h3>
+                            <small class="text-muted fw-700 smaller text-uppercase">Total Doers</small>
+                        </div>
+                        <div class="col-6">
+                            <h3 class="fw-900 mb-0 text-primary">{{ verified_doers }}</h3>
+                            <small class="text-muted fw-700 smaller text-uppercase">Verified</small>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
+
+    <div class="row g-4">
+        <div class="col-lg-8">
+            <div class="card border-0 shadow-sm rounded-5 bg-white h-100">
+                <div class="card-header bg-transparent border-0 p-4 pb-0"><h6 class="fw-800 mb-0">Task Velocity</h6></div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="p-4 bg-light rounded-4 d-flex justify-content-between align-items-center">
+                                <span class="fw-800 text-dark">Open Tasks</span>
+                                <span class="h2 fw-900 text-info mb-0">{{ no_of_open_tasks }}</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="p-4 bg-light rounded-4 d-flex justify-content-between align-items-center">
+                                <span class="fw-800 text-dark">Completed</span>
+                                <span class="h2 fw-900 text-success mb-0">{{ no_of_completed_tasks }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="card border-0 shadow-sm rounded-5 bg-white h-100 border-start border-5 border-danger">
+                <div class="card-body p-4 text-center d-flex flex-column justify-content-center">
+                    <h6 class="fw-800 text-danger text-uppercase smaller mb-2">Platform Safety</h6>
+                    <h1 class="fw-900 text-danger mb-1">{{ no_of_reported_accounts }}</h1>
+                    <p class="small text-muted fw-600 mb-0">Reported Accounts</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
+
+<style>
+    .fw-900 { font-weight: 900; }
+    .fw-800 { font-weight: 800; }
+    .smaller { font-size: 0.75rem; letter-spacing: 0.5px; }
+</style>
 {% endblock %}

@@ -9,4 +9,6 @@ urlpatterns = [
     path('giver-home/', views.giver_home, name='giver_home'),
     path('doer-home/', views.doer_home, name='doer_home'),
     path('logout/', views.logout_user, name='logout_user'),
+    path('forgot-password/', views.forgot_password, name='forgot_password'),
+    path('how-it-works/', views.how_it_works, name='how_it_works'),
 ]

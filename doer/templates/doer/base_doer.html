@@ -3,287 +3,223 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block page_title %}Doer Hub{% endblock %}</title>
+    <title>{% block page_title %}Doer Hub | LocalTask AI{% endblock %}</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     
     <style>
         :root {
-            --forest-base: #064e3b;      /* Deeper Forest */
-            --emerald-accent: #10b981;   /* Emerald Green */
-            --emerald-hover: #059669;    /* Darker Emerald */
-            --soft-emerald: #f0fdf4;     /* Ultra Light Emerald */
-            --slate-border: #e2e8f0;
-            --glass-bg: rgba(255, 255, 255, 0.95);
+            /* BLUE THEME GRADIENTS */
+            --main-gradient: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            --user-gradient: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            --blue-accent: #3b82f6;
+            --soft-bg: #f8fafc;
         }
 
         body {
-            background-color: #f8fafc;
+            background-color: var(--soft-bg);
             min-height: 100vh;
             display: flex;
             flex-direction: column;
-            font-family: 'Inter', sans-serif;
-            color: #1e293b;
+            font-family: 'Plus Jakarta Sans', sans-serif;
         }
 
-        /* --- MODERN NAVIGATION --- */
+        /* --- VIBRANT NAVIGATION --- */
         .doer-nav {
-            background: var(--glass-bg);
-            backdrop-filter: blur(10px);
-            border-bottom: 3px solid var(--emerald-accent);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(15px);
+            border-bottom: 3px solid var(--blue-accent);
             padding: 0;
-            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
-            z-index: 1000;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+            z-index: 1050;
         }
 
         .nav-container {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            height: 75px;
+            height: 85px;
         }
 
-        .nav-links {
+        /* --- DESIGNED LOGO (Blue Variant) --- */
+        .logo-box {
             display: flex;
-            gap: 1.25rem;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .logo-icon {
+            width: 45px;
+            height: 45px;
+            background: var(--main-gradient);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+            transform: rotate(-5deg);
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.2rem;
+            color: #1e3a8a;
+            letter-spacing: -0.5px;
+            line-height: 1;
+        }
+
+        /* --- NAV LINKS --- */
+        .nav-links-list {
+            display: flex;
+            gap: 5px;
             list-style: none;
             margin: 0;
             padding: 0;
-            height: 100%;
         }
 
-        .nav-links li { height: 100%; }
-
-        .nav-links a {
+        .nav-links-list a {
             text-decoration: none;
             color: #475569;
-            font-weight: 500;
-            font-size: 0.9rem;
-            display: flex;
-            align-items: center;
-            height: 100%;
-            position: relative;
-            transition: all 0.25s ease;
-            padding: 0 8px;
-        }
-
-        .nav-links a i { font-size: 1.1rem; }
-
-        .nav-links a:hover {
-            color: var(--emerald-accent);
-            transform: translateY(-1px);
-        }
-
-        .nav-links a.active-link, 
-        .nav-links a.active {
-            color: var(--forest-base);
             font-weight: 700;
+            font-size: 0.75rem;
+            padding: 10px 12px;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            transition: all 0.3s;
         }
 
-        .nav-links a.active-link::after,
-        .nav-links a.active::after {
-            content: "";
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 4px;
-            background: var(--emerald-accent);
-            border-radius: 10px 10px 0 0;
-            box-shadow: 0 -2px 10px rgba(16, 185, 129, 0.3);
+        .nav-links-list a i { font-size: 1.2rem; margin-bottom: 3px; }
+        
+        /* Icon Colors */
+        .i-dash { color: #3b82f6; }
+        .i-find { color: #f59e0b; }
+        .i-apps { color: #8b5cf6; }
+        .i-msg { color: #06b6d4; }
+        .i-hired { color: #10b981; }
+        .i-pref { color: #f97316; }
+        .i-prof { color: #6366f1; }
+        .i-verify { color: #1e3a8a; }
+
+        .nav-links-list a:hover {
+            background: #f1f5f9;
+            transform: translateY(-3px);
+            color: var(--blue-accent);
         }
 
-        /* --- STATUS PILLS & IDENTITY --- */
-        .doer-status-box {
+        .nav-links-list a.active-link {
+            background: #eff6ff;
+            color: var(--blue-accent);
+        }
+
+        /* --- USER ZONE --- */
+        .user-zone {
             display: flex;
             align-items: center;
-            gap: 1rem;
-            background: var(--soft-emerald);
-            padding: 6px 16px;
-            border-radius: 14px;
-            border: 1px solid rgba(16, 185, 129, 0.1);
-        }
-
-        .status-pill {
-            font-size: 0.65rem;
-            font-weight: 800;
-            padding: 5px 14px;
+            gap: 12px;
+            background: var(--user-gradient);
+            padding: 8px 8px 8px 18px;
             border-radius: 50px;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
         }
 
-        .btn-logout {
-            color: #dc2626;
-            text-decoration: none;
-            font-size: 0.85rem;
-            font-weight: 700;
-            padding: 8px 16px;
-            border-radius: 10px;
-            transition: all 0.2s;
+        .user-meta {
+            text-align: right;
+            line-height: 1.2;
+        }
+
+        .logout-btn {
+            width: 42px;
+            height: 42px;
+            background: white;
+            color: #be123c;
+            border-radius: 50%;
             display: flex;
             align-items: center;
-            gap: 6px;
-        }
-
-        .btn-logout:hover {
-            background: #fef2f2;
-            color: #b91c1c;
-        }
-
-        /* --- MAIN WRAPPER --- */
-        .main-wrapper {
-            flex: 1;
-            padding: 2rem 0;
-        }
-
-        .content-header {
-            margin-bottom: 2rem;
-            border-left: 5px solid var(--emerald-accent);
-            padding-left: 1rem;
-        }
-
-        /* --- FOOTER --- */
-        footer {
-            background: var(--forest-base);
-            color: #ffffff;
-            padding: 3rem 0;
-            margin-top: auto;
-            border-top: 5px solid var(--emerald-accent);
-        }
-
-        .footer-brand {
-            font-size: 1.5rem;
-            color: var(--emerald-accent);
-            font-weight: 800;
+            justify-content: center;
             text-decoration: none;
-            letter-spacing: -0.5px;
+            font-size: 1.1rem;
+            transition: all 0.3s;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        .footer-brand span { color: #fff; }
-
-        /* Animation */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .logout-btn:hover {
+            background: #be123c;
+            color: white;
+            transform: scale(1.1) rotate(10deg);
         }
-        .main-wrapper { animation: fadeIn 0.4s ease-out; }
+
+        .main-wrapper { flex: 1; padding: 2.5rem 0; }
+        footer { background: #1e3a8a; color: white; padding: 2.5rem 0; text-align: center; }
+        
+        .invites-btn {
+            background: white !important;
+            border: 1px solid var(--blue-accent) !important;
+            color: var(--blue-accent) !important;
+        }
     </style>
 </head>
 <body>
 
     <nav class="doer-nav sticky-top">
         <div class="container nav-container">
-            <ul class="nav-links">
-                <li>
-                    <a href="{% url 'doer_home' %}" class="{% if request.resolver_match.url_name == 'doer_home' %}active-link{% endif %}">
-                        <i class="bi bi-speedometer2 me-2"></i>Dashboard
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'doer_task_feed' %}" class="{% if request.resolver_match.url_name == 'doer_task_feed' %}active-link{% endif %}">
-                        <i class="bi bi-search me-2"></i>Find Work
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'my_requests' %}" class="{% if request.resolver_match.url_name == 'my_requests' %}active-link{% endif %}">
-                        <i class="bi bi-send me-2"></i>My Applications
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'doer_chat_inbox' %}" class="{% if 'messages' in request.path %}active-link{% endif %}">
-                        <i class="bi bi-chat-dots me-2"></i>Messages
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'doer_hired_jobs' %}" class="{% if request.resolver_match.url_name == 'doer_hired_jobs' %}active{% endif %}">
-                        <i class="bi bi-briefcase me-2"></i>Hired Jobs
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'doer_completed_history' %}" class="{% if request.resolver_match.url_name == 'doer_completed_history' %}active{% endif %}">
-                        <i class="bi bi-clock-history me-2"></i>Job History
-                    </a>
-                </li>
+            <a href="{% url 'doer_home' %}" class="logo-box">
+                <div class="logo-icon">
+                    <i class="bi bi-robot"></i>
+                </div>
+                <div class="logo-text">
+                    LocalTask<br><span style="color: var(--blue-accent)">AI</span>
+                </div>
+            </a>
+            
+            <ul class="nav-links-list">
+                <li><a href="{% url 'doer_home' %}" class="{% if request.resolver_match.url_name == 'doer_home' %}active-link{% endif %}"><i class="bi bi-grid-1x2-fill i-dash"></i>Dashboard</a></li>
+                <li><a href="{% url 'doer_task_feed' %}" class="{% if request.resolver_match.url_name == 'doer_task_feed' %}active-link{% endif %}"><i class="bi bi-search i-find"></i>Find Work</a></li>
+                <li><a href="{% url 'my_requests' %}" class="{% if request.resolver_match.url_name == 'my_requests' %}active-link{% endif %}"><i class="bi bi-send-check-fill i-apps"></i>Applications</a></li>
+                <li><a href="{% url 'doer_hired_jobs' %}" class="{% if request.resolver_match.url_name == 'doer_hired_jobs' %}active-link{% endif %}"><i class="bi bi-briefcase-fill i-hired"></i>Hired</a></li>
+                <li><a href="{% url 'doer_chat_inbox' %}" class="{% if 'messages' in request.path %}active-link{% endif %}"><i class="bi bi-chat-dots-fill i-msg"></i>Messages</a></li>
+                <li><a href="{% url 'manage_preferences' user.id %}"><i class="bi bi-sliders i-pref"></i>Preferences</a></li>
+                <li><a href="{% url 'doer_profile_view' %}"><i class="bi bi-person-badge-fill i-prof"></i>Profile</a></li>
+                <li><a href="{% url 'verification_badge' %}"><i class="bi bi-patch-check-fill i-verify"></i>Security</a></li>
                 
-                <li class="nav-item">
-    <a class="nav-link" href="{% url 'manage_preferences' user.id %}">
-        <i class="fas fa-tools"></i> 
-        <span>Skills & Locations</span>
-    </a>
-</li>
                 <li>
-                    <a href="{% url 'doer_profile_view' %}" class="{% if request.resolver_match.url_name == 'doer_profile_view' %}active-link{% endif %}">
-                        <i class="bi bi-person-circle me-2"></i>Profile
-                    </a>
-                </li>
-                <li>
-                    <a href="{% url 'verification_badge' %}" class="{% if request.resolver_match.url_name == 'verification_badge' %}active-link{% endif %}">
-                        <i class="bi bi-patch-check-fill me-1"></i>Verification
+                    <a href="{% url 'doer_job_requests' %}" class="invites-btn">
+                        <i class="bi bi-envelope-check-fill"></i>Invites
+                        {% if pending_req_count > 0 %}
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                        {% endif %}
                     </a>
                 </li>
             </ul>
-           <li class="nav-item">
-    <a class="nav-link {% if request.resolver_match.url_name == 'doer_job_requests' %}active-link{% endif %}" 
-       href="{% url 'doer_job_requests' %}">
-        <i class="bi bi-envelope-check me-2 text-primary"></i>
-        <span class="fw-bold">Job Invitations</span>
-        
-        {% if pending_req_count > 0 %}
-            <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle">
-                <span class="visually-hidden">New alerts</span>
-            </span>
-        {% endif %}
-    </a>
-</li>
 
-            <div class="doer-status-box">
-                <div class="d-none d-lg-block text-end me-2" style="line-height: 1.2;">
+            <div class="user-zone">
+                <div class="user-meta d-none d-xl-block">
                     <div class="fw-bold text-dark small">{{ user.username }}</div>
-                    <span class="text-emerald-hover" style="font-size: 0.65rem; font-weight: 700; text-transform: uppercase;">Task Doer</span>
+                    <div style="font-size: 0.6rem; font-weight: 800; color: var(--blue-accent);">SKILLED TALENT</div>
                 </div>
-
-                {% if user.approval_status == 'Approved' %}
-                    <i class="bi bi-patch-check-fill text-primary" title="Verified Doer" style="font-size: 1.2rem;"></i>
-                {% endif %}
-                
-                <span class="status-pill {% if user.status == 'Active' %}bg-success text-white{% else %}bg-secondary text-white{% endif %}">
-                    {{ user.status }}
-                </span>
-
-                <div class="vr mx-1 text-secondary opacity-25" style="height: 25px;"></div>
-
-                <a href="{% url 'logout_user' %}" class="btn-logout">
-                    <i class="bi bi-box-arrow-right"></i> Logout
+                <a href="{% url 'logout_user' %}" class="logout-btn" title="Sign Out">
+                    <i class="bi bi-power"></i>
                 </a>
             </div>
         </div>
     </nav>
 
     <main class="main-wrapper">
-        <div class="container"> 
-            {% if block.content_title %}
-            <div class="content-header"> 
-                <h2 class="fw-bold text-dark mb-0">{% block content_title %}{% endblock %}</h2>
-            </div>
-            {% endif %}
-
+        <div class="container">
             {% block content %}{% endblock %}
         </div>
     </main>
 
     <footer>
-        <div class="container text-center">
-            <a href="#" class="footer-brand">LocalTask<span>AI</span></a>
-            <p class="text-white-50 mt-2 mb-4">Empowering Local Talent through Intelligence.</p>
-            <div class="row justify-content-center">
-                <div class="col-md-6 border-top border-secondary pt-4">
-                    <p class="small text-white-50 mb-0">&copy; 2026 Doer Portal. Work Hard, Earn Easy.</p>
-                </div>
-            </div>
+        <div class="container">
+            <p class="small opacity-75 mb-0">&copy; 2026 LocalTask AI | Smart Local Service Platform</p>
         </div>
     </footer>
 

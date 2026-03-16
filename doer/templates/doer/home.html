@@ -1,124 +1,115 @@
 {% extends 'doer/base_doer.html' %}
 
-{% block page_title %}Advanced Doer Command Center{% endblock %}
+{% block page_title %}Dashboard | LocalTask AI{% endblock %}
 
 {% block content %}
 <div class="row g-4 animate__animated animate__fadeIn">
     
-    <div class="col-12">
-        <div class="card border-0 shadow-sm p-4 bg-white rounded-4 border-start border-4 border-success">
-            <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
-                <div>
-                    <h2 class="fw-bold mb-1" style="color: var(--forest-base);">
-                        Hello, {{ user.username|title }}! <span class="fs-4">👋</span>
-                    </h2>
-                    <p class="text-muted mb-0">Your profile is <span class="text-success fw-bold">85% Complete</span>. Add more skills to rank higher in AI scans!</p>
-                </div>
-                <div class="d-flex gap-3">
-                    <div class="text-center px-3 border-end">
-                        <p class="small text-muted mb-0 text-uppercase fw-bold">Earned</p>
-                        <h5 class="fw-bold text-success mb-0">₹0.00</h5>
-                    </div>
-                    <div class="text-center px-3">
-                        <p class="small text-muted mb-0 text-uppercase fw-bold">Wallet</p>
-                        <h5 class="fw-bold text-dark mb-0">₹0.00</h5>
-                    </div>
-                </div>
-            </div>
+    <div class="col-12 mb-2">
+        <h2 class="fw-800 text-dark mb-1">Welcome back, {{ user.name|default:user.username }}!</h2>
+        <p class="text-muted fw-500">You have <span class="text-primary fw-bold">{{ active_jobs_count }} active tasks</span> to focus on today.</p>
+    </div>
+
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-4 border-primary">
+            <div class="small fw-800 text-muted text-uppercase mb-1">Total Earnings</div>
+            <div class="h3 fw-900 text-dark">₹{{ total_earnings }}</div>
+            <div class="text-success small fw-bold mt-2"><i class="bi bi-graph-up-arrow me-1"></i>Verified Income</div>
         </div>
     </div>
 
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm p-3 text-center rounded-4 h-100 bg-white">
-            <div class="rounded-circle bg-primary bg-opacity-10 p-3 mx-auto mb-2" style="width: fit-content;">
-                <i class="bi bi-lightning-charge-fill text-primary fs-4"></i>
-            </div>
-            <h4 class="fw-bold mb-0">{{ pending_req_count|default:"0" }}</h4>
-            <p class="text-muted small mb-0">New Invitations</p>
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-4 border-info">
+            <div class="small fw-800 text-muted text-uppercase mb-1">Reputation</div>
+            <div class="h3 fw-900 text-dark">{{ avg_rating|floatformat:1 }} <span class="fs-6 text-muted">/ 5</span></div>
+            <div class="text-warning small fw-bold mt-2"><i class="bi bi-star-fill me-1"></i>{{ total_reviews }} Reviews</div>
         </div>
     </div>
+
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm p-3 text-center rounded-4 h-100 bg-white">
-            <div class="rounded-circle bg-success bg-opacity-10 p-3 mx-auto mb-2" style="width: fit-content;">
-                <i class="bi bi-check2-circle text-success fs-4"></i>
-            </div>
-            <h4 class="fw-bold mb-0">0</h4>
-            <p class="text-muted small mb-0">Completed Jobs</p>
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-4 border-warning">
+            <div class="small fw-800 text-muted text-uppercase mb-1">Applications</div>
+            <div class="h3 fw-900 text-dark">{{ pending_apps_count }}</div>
+            <div class="text-muted small fw-bold mt-2">Active Proposals</div>
         </div>
     </div>
+
     <div class="col-md-3">
-        <div class="card border-0 shadow-sm p-3 text-center rounded-4 h-100 bg-white">
-            <div class="rounded-circle bg-warning bg-opacity-10 p-3 mx-auto mb-2" style="width: fit-content;">
-                <i class="bi bi-star-fill text-warning fs-4"></i>
-            </div>
-            <h4 class="fw-bold mb-0">N/A</h4>
-            <p class="text-muted small mb-0">Avg. Rating</p>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="card border-0 shadow-sm p-3 text-center rounded-4 h-100 bg-white">
-            <div class="rounded-circle bg-info bg-opacity-10 p-3 mx-auto mb-2" style="width: fit-content;">
-                <i class="bi bi-geo-alt-fill text-info fs-4"></i>
-            </div>
-            <h4 class="fw-bold mb-0">1</h4>
-            <p class="text-muted small mb-0">Active Areas</p>
+        <div class="card border-0 shadow-sm rounded-4 p-3 h-100 bg-white border-start border-4 border-success">
+            <div class="small fw-800 text-muted text-uppercase mb-1">Identity</div>
+            <div class="h3 fw-900 text-dark">{% if user.approval_status == 'Approved' %}Verified{% else %}Pending{% endif %}</div>
+            <div class="text-primary small fw-bold mt-2"><i class="bi bi-shield-lock-fill me-1"></i>Security Status</div>
         </div>
     </div>
 
     <div class="col-lg-8">
-        <div class="card border-0 shadow-sm p-4 rounded-4 bg-white h-100">
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                <h5 class="fw-bold mb-0"><i class="bi bi-envelope-paper-heart text-danger me-2"></i>Priority Invitations</h5>
-                <a href="{% url 'doer_job_requests' %}" class="btn btn-sm btn-outline-success rounded-pill px-3">View All</a>
+        <div class="card border-0 shadow-sm rounded-5 bg-white mb-4">
+            <div class="card-header bg-white p-4 border-0 d-flex justify-content-between align-items-center">
+                <h5 class="fw-900 mb-0">Active Schedule</h5>
+                <a href="{% url 'doer_hired_jobs' %}" class="btn btn-light btn-sm rounded-pill fw-800 px-3">View All</a>
             </div>
-
-            {% if pending_invites %}
-                {% for invite in pending_invites %}
-                <div class="p-3 border rounded-4 mb-3 hover-shadow transition">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>
-                            <h6 class="fw-bold mb-1">{{ invite.task.title }}</h6>
-                            <p class="small text-muted mb-0"><i class="bi bi-geo-alt me-1"></i>{{ invite.task.place }} | ₹{{ invite.task.budget }}</p>
-                        </div>
-                        <div class="d-flex gap-2">
-                            <a href="{% url 'handle_job_request' invite.id 'confirm' %}" class="btn btn-sm btn-success rounded-pill px-3">Accept</a>
-                            <a href="{% url 'handle_job_request' invite.id 'cancel' %}" class="btn btn-sm btn-light rounded-pill px-3">Decline</a>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for task in current_work %}
+                    <div class="list-group-item p-4 border-0 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start">
+                            <div>
+                                <span class="badge bg-blue-soft text-primary rounded-pill px-3 mb-2">{{ task.category.category_name }}</span>
+                                <h6 class="fw-800 text-dark mb-1">{{ task.title }}</h6>
+                                <p class="text-muted small mb-0"><i class="bi bi-person me-1"></i>Client: {{ task.giver.name }}</p>
+                            </div>
+                            <div class="text-end">
+                                <div class="fw-900 text-dark">₹{{ task.budget }}</div>
+                                <div class="small text-danger fw-800 mt-1"><i class="bi bi-clock me-1"></i>{{ task.deadline_datetime|timeuntil }} left</div>
+                            </div>
                         </div>
                     </div>
+                    {% empty %}
+                    <div class="text-center py-5">
+                        <i class="bi bi-search display-1 opacity-10"></i>
+                        <p class="text-muted fw-bold mt-3">No active jobs. Start applying!</p>
+                        <a href="{% url 'doer_task_feed' %}" class="btn btn-primary rounded-pill fw-800 px-4 mt-2">Find Work</a>
+                    </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
-            {% else %}
-                <div class="py-5 text-center bg-light rounded-4 border-dashed">
-                    <i class="bi bi-robot text-muted display-6 mb-2"></i>
-                    <p class="text-muted">No active invitations. AI is scanning for matches...</p>
-                </div>
-            {% endif %}
+            </div>
         </div>
     </div>
 
     <div class="col-lg-4">
-        <div class="card border-0 shadow-sm p-4 rounded-4 bg-white mb-4">
-            <h5 class="fw-bold mb-3"><i class="bi bi-shield-check text-primary me-2"></i>Safety Score</h5>
-            <div class="progress mb-2" style="height: 10px; border-radius: 10px;">
-                <div class="progress-bar bg-success" role="progressbar" style="width: 100%" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>
-            <p class="small text-muted">Excellent! No reports or strikes on your account.</p>
+        {% if not has_preferences %}
+        <div class="card border-0 shadow-sm rounded-5 bg-dark text-white p-4 mb-4">
+            <h6 class="fw-900 mb-2 text-info"><i class="bi bi-cpu-fill me-2"></i>AI Match Disabled</h6>
+            <p class="small opacity-75 fw-500">You haven't set your skills and locations. Recruiters can't find you!</p>
+            <a href="{% url 'manage_preferences' user.id %}" class="btn btn-info btn-sm rounded-pill fw-900 w-100">Setup Professional Profile</a>
         </div>
+        {% else %}
+        <div class="card border-0 shadow-sm rounded-5 bg-primary text-white p-4 mb-4">
+            <h6 class="fw-900 mb-2 text-white"><i class="bi bi-lightning-fill me-2"></i>AI Match Active</h6>
+            <p class="small opacity-75 fw-500">Your profile is visible to Givers looking for your specific skills in your area.</p>
+            <div class="d-flex align-items-center mt-2">
+                <span class="badge bg-white text-primary rounded-pill">Optimized</span>
+            </div>
+        </div>
+        {% endif %}
 
-        <div class="card border-0 shadow-sm p-4 rounded-4 bg-dark text-white">
-            <h6 class="fw-bold text-emerald mb-2">Pro Tip:</h6>
-            <p class="small mb-0 opacity-75">Tasks with detailed descriptions are 40% more likely to be completed successfully. Communication is key!</p>
+        <div class="card border-0 shadow-sm rounded-5 bg-white p-4">
+            <h6 class="fw-900 mb-3 text-dark">Quick Actions</h6>
+            <div class="d-grid gap-2">
+                <a href="{% url 'doer_task_feed' %}" class="btn btn-outline-primary rounded-pill fw-800 text-start ps-3">
+                    <i class="bi bi-search me-2"></i> Browse New Tasks
+                </a>
+                <a href="{% url 'doer_profile_view' %}" class="btn btn-outline-secondary rounded-pill fw-800 text-start ps-3">
+                    <i class="bi bi-person me-2"></i> Update Profile
+                </a>
+            </div>
         </div>
     </div>
 </div>
 
 <style>
-    .hover-shadow:hover {
-        box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-        border-color: var(--emerald-accent) !important;
-    }
-    .transition { transition: all 0.3s ease; }
-    .border-dashed { border: 2px dashed #dee2e6 !important; }
-    .text-emerald { color: #10b981; }
+    .bg-blue-soft { background-color: #e0f2fe; }
+    .fw-800 { font-weight: 800; }
+    .fw-900 { font-weight: 900; }
 </style>
 {% endblock %}

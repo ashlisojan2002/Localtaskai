@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block page_title %}LocalTask AI | Smart Local Service Platform{% endblock %}</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    
+    <style>
+        :root {
+            --giver-green: #10b981;
+            --doer-blue: #3b82f6;
+            --brand-dark: #0f172a;
+            --glass: rgba(255, 255, 255, 0.9);
+            --border-subtle: rgba(0, 0, 0, 0.08);
+        }
+
+        body {
+            background-color: #ffffff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            color: var(--brand-dark);
+            letter-spacing: -0.01em;
+            overflow-x: hidden;
+        }
+
+        /* --- AERO-GLASS NAVIGATION --- */
+        .guest-nav {
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            height: 85px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-subtle);
+            z-index: 1100;
+            position: sticky;
+            top: 0;
+        }
+
+        .logo-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: opacity 0.2s;
+        }
+
+        .logo-box:hover { opacity: 0.85; }
+
+        .logo-icon {
+            width: 42px;
+            height: 42px;
+            background: linear-gradient(135deg, var(--brand-dark) 0%, #1e293b 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.3rem;
+            box-shadow: 0 8px 20px rgba(15, 23, 42, 0.15);
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--brand-dark);
+            letter-spacing: -1px;
+            line-height: 1;
+        }
+        .logo-text span { color: var(--doer-blue); }
+
+        /* --- BUTTON SYSTEM --- */
+        .btn-saas {
+            font-weight: 700;
+            font-size: 0.9rem;
+            padding: 12px 26px;
+            border-radius: 12px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-nav-link {
+            color: var(--brand-dark);
+            font-weight: 600;
+            text-decoration: none;
+            margin-right: 25px;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        .btn-nav-link:hover { color: var(--doer-blue); }
+
+        .btn-outline-custom {
+            color: var(--brand-dark);
+            border: 1.5px solid var(--border-subtle);
+            background: transparent;
+        }
+        .btn-outline-custom:hover {
+            border-color: var(--brand-dark);
+            background: #f8fafc;
+        }
+
+        .btn-primary-custom {
+            background: var(--brand-dark);
+            color: white !important;
+            box-shadow: 0 10px 25px rgba(15, 23, 42, 0.1);
+        }
+        .btn-primary-custom:hover {
+            background: #000;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(15, 23, 42, 0.2);
+        }
+
+        /* --- CONTENT AREA --- */
+        .main-content {
+            flex: 1;
+            /* Ensures content doesn't get hidden behind fixed nav */
+        }
+
+        /* --- PROFESSIONAL FOOTER --- */
+        footer {
+            background: #f8fafc;
+            padding: 60px 0 30px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .footer-logo { font-size: 1.2rem; font-weight: 800; margin-bottom: 20px; display: block; text-decoration: none; color: var(--brand-dark); }
+        .footer-link { color: #64748b; text-decoration: none; font-size: 0.9rem; transition: 0.2s; }
+        .footer-link:hover { color: var(--doer-blue); }
+        .footer-heading { font-weight: 700; font-size: 0.85rem; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 20px; }
+        
+        .copyright-bar {
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+
+    <nav class="guest-nav">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="{% url 'index' %}" class="logo-box">
+                <div class="logo-icon">
+                    <i class="bi bi-lightning-charge-fill"></i>
+                </div>
+                <div class="logo-text">
+                    LocalTask<span>AI</span>
+                </div>
+            </a>
+
+            <div class="d-flex align-items-center">
+                <div class="d-none d-lg-flex me-4">
+                    <a href="{% url 'index' %}" class="btn-nav-link">Home</a>
+                    <li><a href="{% url 'how_it_works' %}" class="footer-link">How it Works</a></li>
+                </div>
+                
+                <div class="d-flex gap-2">
+                    <a href="{% url 'login_page' %}" class="btn-saas btn-outline-custom">
+                        Sign In
+                    </a>
+                    <a href="{% url 'register' %}" class="btn-saas btn-primary-custom d-none d-sm-inline-flex">
+                        Get Started <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-4 mb-4 mb-lg-0">
+                <a href="{% url 'index' %}" class="footer-logo">LocalTask<span>AI</span></a>
+                <p class="text-muted small pe-lg-5">
+                    Empowering local communities by connecting verified task givers with skilled experts. Experience the future of local services with AI-driven matching and secure neural verification.
+                </p>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <h6 class="footer-heading">Platform</h6>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'index' %}" class="footer-link">Home</a></li>
+                    <li><a href="{% url 'register' %}" class="footer-link">Join as Doer</a></li>
+                    <li><a href="{% url 'register' %}" class="footer-link">Post a Task</a></li>
+                </ul>
+            </div>
+
+            <div class="col-6 col-lg-2">
+                <h6 class="footer-heading">Support</h6>
+                <ul class="list-unstyled">
+                    <li><a href="{% url 'how_it_works' %}" class="footer-link">How it Works</a></li>
+                    <li><a href="#" class="footer-link">Help Center</a></li>
+                    <li><a href="#" class="footer-link">Privacy Policy</a></li>
+                    <li><a href="#" class="footer-link">Terms of Service</a></li>
+                </ul>
+            </div>
+
+            <div class="col-lg-4">
+                <h6 class="footer-heading">Contact Us</h6>
+                <p class="footer-link mb-1">localtaskai@gmail.com</p>
+                <div class="d-flex gap-3 mt-3">
+                    <a href="#" class="text-muted fs-5"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-muted fs-5"><i class="bi bi-linkedin"></i></a>
+                    <a href="#" class="text-muted fs-5"><i class="bi bi-twitter-x"></i></a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="copyright-bar d-flex flex-column flex-md-row justify-content-between align-items-center">
+            <p class="mb-0">&copy; 2026 LocalTask AI. All rights reserved.</p>
+            <div class="d-flex gap-3 mt-2 mt-md-0">
+                <span>Proudly made in Kerala</span>
+                <i class="bi bi-heart-fill text-danger"></i>
+            </div>
+        </div>
+    </div>
+</footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

@@ -1,14 +1,15 @@
 {% extends 'doer/base_doer.html' %}
 
 {% block content %}
-<div class="container-fluid py-4">
-    <div class="row g-0 shadow-sm rounded-4 overflow-hidden bg-white" style="height: 85vh; border: 1px solid #e2e8f0; margin-bottom: 2rem;">
+<div class="container-fluid py-4 animate__animated animate__fadeIn">
+    <div class="row g-0 shadow-lg rounded-5 overflow-hidden bg-white" style="height: 82vh; border: 1px solid rgba(0,0,0,0.05); margin-bottom: 2rem;">
         
-        <div class="col-md-4 col-lg-3 border-end bg-white overflow-auto">
-            <div class="p-3 border-bottom bg-white sticky-top">
-                <h5 class="fw-bold mb-0">Messages</h5>
+        <div class="col-md-4 col-lg-3 border-end bg-white d-flex flex-column">
+            <div class="p-4 border-bottom bg-white">
+                <h5 class="fw-800 mb-0 text-dark" style="letter-spacing: -0.5px;">Messages</h5>
             </div>
-            <div class="list-group list-group-flush">
+            
+            <div class="list-group list-group-flush overflow-auto flex-grow-1 custom-scrollbar">
                 {% for app in applications %}
                 <a href="{% url 'doer_chat_inbox' app.task.giver.id %}" 
                    class="list-group-item list-group-item-action p-3 border-0 {% if other_user.id == app.task.giver.id %}active-chat-item{% endif %}">
@@ -18,9 +19,9 @@
                                 <object>
                                     <a href="{% url 'public_giver_profile' app.task.giver.id %}" onclick="event.stopPropagation();">
                                         {% if app.task.giver.photo %}
-                                            <img src="{{ app.task.giver.photo.url }}" class="rounded-circle border" width="45" height="45" style="object-fit: cover;">
+                                            <img src="{{ app.task.giver.photo.url }}" class="rounded-circle border-2 border-white shadow-sm" width="48" height="48" style="object-fit: cover;">
                                         {% else %}
-                                            <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center border" style="width: 45px; height: 45px; font-weight: bold;">
+                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center shadow-sm" style="width: 48px; height: 48px; font-weight: 800; font-size: 1.1rem;">
                                                 {{ app.task.giver.name|slice:":1" }}
                                             </div>
                                         {% endif %}
@@ -28,111 +29,90 @@
                                 </object>
                             </div>
                             <div class="overflow-hidden">
-                                <h6 class="mb-0 fw-bold text-dark text-truncate">
+                                <h6 class="mb-0 fw-700 text-dark text-truncate" style="font-size: 0.9rem;">
                                     {{ app.task.giver.name }}
-                                    {% if app.task.giver.approval_status == 'Accepted' %}
+                                    {% if app.task.giver.approval_status == 'Approved' %}
                                         <i class="bi bi-patch-check-fill text-primary ms-1" title="Verified Giver"></i>
                                     {% endif %}
                                 </h6>
+                                <p class="mb-0 text-muted smaller text-truncate">Click to view chat</p>
                             </div>
                         </div>
 
                         <span id="unread-badge-{{ app.task.giver.id }}" 
-                              class="badge rounded-pill bg-success shadow-sm unread-count-badge {% if not app.unread_count %}d-none{% endif %}" 
-                              style="font-size: 0.7rem; padding: 0.4em 0.65em;">
+                              class="badge rounded-pill bg-danger shadow-sm unread-count-badge {% if not app.unread_count %}d-none{% endif %}" 
+                              style="font-size: 0.65rem; padding: 0.4em 0.6em;">
                             {{ app.unread_count }}
                         </span>
                     </div>
                 </a>
                 {% empty %}
-                <div class="p-4 text-center text-muted">
-                    <p class="small">No conversations found.</p>
+                <div class="p-5 text-center text-muted">
+                    <i class="bi bi-chat-dots opacity-20 display-4"></i>
+                    <p class="small mt-3 fw-600">No conversations yet.</p>
                 </div>
                 {% endfor %}
             </div>
         </div>
 
-        <div class="col-md-8 col-lg-9 d-flex flex-column bg-light" style="height: 100%;">
+        <div class="col-md-8 col-lg-9 d-flex flex-column bg-white" style="height: 100%;">
             {% if other_user %}
-                <div class="card-header bg-white py-3 border-bottom shadow-sm">
+                <div class="py-3 px-4 border-bottom bg-white shadow-sm z-1">
                     <div class="d-flex align-items-center">
-                        <div class="position-relative me-3 ps-3">
+                        <div class="position-relative me-3">
                             <a href="{% url 'public_giver_profile' other_user.id %}">
                                 {% if other_user.photo %}
-                                    <img src="{{ other_user.photo.url }}" class="rounded-circle border" width="50" height="50" style="object-fit: cover;">
+                                    <img src="{{ other_user.photo.url }}" class="rounded-circle border" width="45" height="45" style="object-fit: cover;">
                                 {% else %}
-                                    <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center border" style="width: 50px; height: 50px; font-weight: bold;">
+                                    <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center" style="width: 45px; height: 45px; font-weight: 800;">
                                         {{ other_user.name|slice:":1" }}
                                     </div>
                                 {% endif %}
                             </a>
                         </div>
                         <div>
-                            <h5 class="fw-bold mb-0 text-dark">
+                            <h6 class="fw-800 mb-0">
                                 <a href="{% url 'public_giver_profile' other_user.id %}" class="text-dark text-decoration-none">
                                     {{ other_user.name }}
                                 </a>
-                                {% if other_user.approval_status == 'Accepted' %}
+                                {% if other_user.approval_status == 'Approved' %}
                                     <i class="bi bi-patch-check-fill text-primary ms-1" title="Verified Giver"></i>
                                 {% endif %}
-                            </h5>
+                            </h6>
+                            <span class="text-success smaller fw-700"><i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i> Secure Encrypted Channel</span>
                         </div>
                     </div>
                 </div>
 
-                <div id="chat-log" class="flex-grow-1 p-4 overflow-auto" style="background: #f0f2f5; display: flex; flex-direction: column;">
+                <div id="chat-log" class="flex-grow-1 p-4 overflow-auto custom-scrollbar" style="background: #f8fafc; display: flex; flex-direction: column;">
                     {% for msg in chat_history %}
                         <div class="d-flex {% if msg.sender == request.user.name %}justify-content-end{% else %}justify-content-start{% endif %} mb-3">
-                            {% if msg.sender != request.user.name %}
-                                <div class="me-2 mt-auto">
-                                    {% if other_user.photo %}
-                                        <img src="{{ other_user.photo.url }}" class="rounded-circle border" width="30" height="30" style="object-fit: cover;">
-                                    {% else %}
-                                        <div class="rounded-circle bg-secondary text-white d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 0.7rem;">
-                                            {{ other_user.name|slice:":1" }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
-
-                            <div class="p-3 shadow-sm bubble" 
-                                 style="max-width: 70%; border-radius: 1.2rem; {% if msg.sender == request.user.name %}background: #10b981; color: white; border-bottom-right-radius: 0.2rem;{% else %}background: white; color: #334155; border-bottom-left-radius: 0.2rem;{% endif %}">
-                                <span style="font-size: 0.95rem;">{{ msg.content }}</span>
-                                <div class="text-end mt-1" style="font-size: 0.65rem; opacity: 0.8;">
+                            <div class="p-3 shadow-sm bubble animate__animated animate__fadeInUp" 
+                                 style="max-width: 65%; border-radius: 1.2rem; {% if msg.sender == request.user.name %}background: var(--main-gradient); color: white; border-bottom-right-radius: 0.2rem;{% else %}background: white; color: #1e293b; border-bottom-left-radius: 0.2rem; border: 1px solid #e2e8f0;{% endif %}">
+                                <span style="font-size: 0.92rem; font-weight: 500;">{{ msg.content }}</span>
+                                <div class="text-end mt-1" style="font-size: 0.62rem; opacity: 0.7; font-weight: 700;">
                                     {{ msg.timestamp|date:"h:i A" }}
                                 </div>
                             </div>
-
-                            {% if msg.sender == request.user.name %}
-                                <div class="ms-2 mt-auto">
-                                    {% if request.user.photo %}
-                                        <img src="{{ request.user.photo.url }}" class="rounded-circle border" width="30" height="30" style="object-fit: cover;">
-                                    {% else %}
-                                        <div class="rounded-circle bg-info text-white d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 0.7rem;">
-                                            {{ request.user.name|slice:":1" }}
-                                        </div>
-                                    {% endif %}
-                                </div>
-                            {% endif %}
                         </div>
                     {% endfor %}
                 </div>
 
-                <div class="card-footer bg-white border-top p-3">
-                    <div class="input-group bg-light rounded-pill px-3 py-1 border shadow-sm">
-                        <input id="chat-message-input" type="text" class="form-control border-0 bg-transparent py-2 shadow-none" placeholder="Type your secure message...">
-                        <button id="chat-message-submit" class="btn btn-success rounded-circle ms-2" style="width: 40px; height: 40px; display: flex; align-items: center; justify-content: center;">
+                <div class="p-4 bg-white border-top">
+                    <div class="d-flex align-items-center bg-light rounded-pill px-3 py-2 border shadow-sm">
+                        <input id="chat-message-input" type="text" class="form-control border-0 bg-transparent py-2 shadow-none fw-600" placeholder="Type a secure message...">
+                        <button id="chat-message-submit" class="btn btn-primary rounded-circle ms-2 d-flex align-items-center justify-content-center shadow" style="width: 45px; height: 45px;">
                             <i class="bi bi-send-fill"></i>
                         </button>
                     </div>
                 </div>
             {% else %}
-                <div class="m-auto text-center text-muted">
-                    <div class="bg-white rounded-circle d-inline-flex p-4 shadow-sm mb-3">
-                        <i class="bi bi-chat-left-text text-primary" style="font-size: 3rem;"></i>
+                <div class="m-auto text-center text-muted px-4">
+                    <div class="rounded-circle d-inline-flex p-4 mb-4" style="background: #eff6ff;">
+                        <i class="bi bi-shield-lock-fill text-primary" style="font-size: 3.5rem;"></i>
                     </div>
-                    <h5 class="fw-bold">Your Inbox</h5>
-                    <p>Select a person from the left to start chatting securely.</p>
+                    <h4 class="fw-800 text-dark">LocalTask AI Messenger</h4>
+                    <p class="fw-500 mx-auto" style="max-width: 400px;">Select a verified client from the sidebar to continue your secure, end-to-end encrypted conversation.</p>
                 </div>
             {% endif %}
         </div>
@@ -140,11 +120,21 @@
 </div>
 
 <style>
-.active-chat-item { background-color: #f1f5f9 !important; border-left: 4px solid #10b981 !important; }
-.bubble { transition: all 0.3s ease; }
-#chat-log::-webkit-scrollbar { width: 5px; }
-#chat-log::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-body { overflow-y: auto; }
+/* High-End Styling Overrides */
+.fw-700 { font-weight: 700; }
+.fw-800 { font-weight: 800; }
+.smaller { font-size: 0.7rem; }
+.active-chat-item { background: #eff6ff !important; border-right: 4px solid var(--blue-accent) !important; }
+.bubble { transition: transform 0.2s ease; }
+.bubble:hover { transform: scale(1.01); }
+
+/* Custom Scrollbar */
+.custom-scrollbar::-webkit-scrollbar { width: 5px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+#chat-log { scroll-behavior: smooth; }
 </style>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -186,22 +176,15 @@ chatSocket.onmessage = function(e) {
         }
 
         if (isMe || messageSenderId === activeOtherUserId) {
-            const userImg = isMe ? "{% if request.user.photo %}{{ request.user.photo.url }}{% endif %}" : "{% if other_user.photo %}{{ other_user.photo.url }}{% endif %}";
-            const userInitial = isMe ? "{{ request.user.name|slice:':1' }}" : "{{ other_user.name|slice:':1' }}";
-            const imgHtml = userImg ? 
-                `<img src="${userImg}" class="rounded-circle border" width="30" height="30" style="object-fit: cover;">` :
-                `<div class="rounded-circle ${isMe ? 'bg-info' : 'bg-secondary'} text-white d-flex align-items-center justify-content-center" style="width: 30px; height: 30px; font-size: 0.7rem;">${userInitial}</div>`;
-
             const msgHtml = `
                 <div class="d-flex ${isMe ? 'justify-content-end' : 'justify-content-start'} mb-3">
-                    ${!isMe ? `<div class="me-2 mt-auto">${imgHtml}</div>` : ''}
-                    <div class="p-3 shadow-sm bubble" style="max-width: 70%; border-radius: 1.2rem; ${isMe ? 'background: #10b981; color: white; border-bottom-right-radius: 0.2rem;' : 'background: white; color: #334155; border-bottom-left-radius: 0.2rem;'}">
-                        <span style="font-size: 0.95rem;">${data.message}</span>
-                        <div class="text-end mt-1" style="font-size: 0.65rem; opacity: 0.8;">
+                    <div class="p-3 shadow-sm bubble animate__animated animate__fadeInUp" 
+                         style="max-width: 65%; border-radius: 1.2rem; ${isMe ? 'background: var(--main-gradient); color: white; border-bottom-right-radius: 0.2rem;' : 'background: white; color: #1e293b; border-bottom-left-radius: 0.2rem; border: 1px solid #e2e8f0;'}">
+                        <span style="font-size: 0.92rem; font-weight: 500;">${data.message}</span>
+                        <div class="text-end mt-1" style="font-size: 0.62rem; opacity: 0.7; font-weight: 700;">
                             ${get12HourTime()}
                         </div>
                     </div>
-                    ${isMe ? `<div class="ms-2 mt-auto">${imgHtml}</div>` : ''}
                 </div>`;
 
             chatLog.innerHTML += msgHtml;

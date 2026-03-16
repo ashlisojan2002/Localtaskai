@@ -33,4 +33,5 @@ path('view-doer/<int:doer_id>/', views.public_doer_profile, name='public_doer_pr
 
 path('job-requests/', views.doer_job_requests, name='doer_job_requests'),
 path('respond-request/<int:task_id>/<str:action>/', views.respond_to_request, name='respond_to_request'),
+path('dashboard/', views.doer_home, name='doer_home'),
 ]

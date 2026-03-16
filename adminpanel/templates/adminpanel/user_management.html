@@ -12,12 +12,14 @@
         <div class="col-md-6 text-md-end">
             <div class="dropdown">
                 <button class="btn btn-white border shadow-sm dropdown-toggle px-4 py-2 fw-semibold" type="button" data-bs-toggle="dropdown">
-                    <i class="bi bi-funnel me-2 text-primary"></i>Status: <strong>{{ current_filter }}</strong>
+                    <i class="bi bi-funnel me-2 text-primary"></i>Status: <strong>{{ display_title }}</strong>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
                     <li><a class="dropdown-item rounded {% if current_filter == 'Under Review' %}active{% endif %}" href="?status=Under Review">Under Review</a></li>
                     <li><a class="dropdown-item rounded {% if current_filter == 'Accepted' %}active{% endif %}" href="?status=Accepted">Accepted</a></li>
                     <li><a class="dropdown-item rounded {% if current_filter == 'Rejected' %}active{% endif %}" href="?status=Rejected">Rejected</a></li>
+                    <li><hr class="dropdown-divider"></li>
+
                 </ul>
             </div>
         </div>
@@ -67,10 +69,6 @@
                                     <a href="{{ u.adhar_photo.url }}" target="_blank" class="btn btn-outline-primary border-end-0" title="View Aadhaar Photo">
                                         <i class="bi bi-card-image me-1"></i> Aadhaar ID
                                     </a>
-                                    {% else %}
-                                    <button class="btn btn-outline-secondary border-end-0 disabled">
-                                        <i class="bi bi-card-image me-1"></i> No ID Photo
-                                    </button>
                                     {% endif %}
                                     
                                     {% if u.verification_live_photo %}
@@ -143,9 +141,8 @@
     .dropdown-item.active { background-color: #0d6efd; color: white; }
     code { font-size: 0.85rem; }
     
-    /* Customizing SweetAlert fonts to match Bootstrap */
     .swal2-popup {
-        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif !important;
+        font-family: inherit !important;
         border-radius: 1.2rem !important;
     }
 </style>

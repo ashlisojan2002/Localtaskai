@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Control Center | LocalTaskAI</title>
+    <title>{% block page_title %}Admin Control Center | LocalTask AI{% endblock %}</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
@@ -11,24 +11,26 @@
 
     <style>
         :root {
-            --admin-bg: #f8fafc;
+            --admin-bg: #f4f7f6;
             --sidebar-dark: #064e3b;      /* Deep Forest */
-            --accent-color: #10b981;      /* Emerald Green */
-            --accent-hover: #059669;      /* Darker Emerald */
-            --text-main: #0f172a;         /* Slate 900 */
+            --accent-emerald: #10b981;    /* Emerald Green */
+            --danger-soft: #fff1f2;
+            --danger-main: #e11d48;
             --sidebar-width: 280px;
             --header-height: 80px;
+            --glass-white: rgba(255, 255, 255, 0.95);
         }
 
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
             background-color: var(--admin-bg);
-            color: var(--text-main);
+            color: #1e293b;
             margin: 0;
             overflow-x: hidden;
+            letter-spacing: -0.01em;
         }
 
-        /* --- ENHANCED SIDEBAR --- */
+        /* --- PREMIUM SIDEBAR --- */
         .admin-sidebar {
             width: var(--sidebar-width);
             position: fixed;
@@ -37,64 +39,71 @@
             left: 0;
             z-index: 1050;
             background: var(--sidebar-dark);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
+            box-shadow: 10px 0 40px rgba(0, 0, 0, 0.08);
             display: flex;
             flex-direction: column;
         }
 
         .brand-section {
-            padding: 30px 25px;
-            font-size: 1.4rem;
+            padding: 35px 30px;
+            font-size: 1.5rem;
             font-weight: 800;
-            letter-spacing: -0.5px;
-            background: rgba(0, 0, 0, 0.1);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            letter-spacing: -1px;
+            background: rgba(0, 0, 0, 0.2);
             display: flex;
             align-items: center;
+        }
+
+        .brand-section i {
+            filter: drop-shadow(0 0 8px var(--accent-emerald));
         }
 
         .nav-group {
-            padding: 25px 15px;
+            padding: 30px 18px;
             flex: 1;
+            list-style: none;
         }
 
         .admin-nav-link {
-            color: rgba(209, 250, 229, 0.7);
+            color: rgba(209, 250, 229, 0.6);
             padding: 14px 20px;
-            margin-bottom: 8px;
+            margin-bottom: 6px;
             display: flex;
             align-items: center;
             text-decoration: none;
-            transition: all 0.25s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 600;
-            font-size: 0.92rem;
-            border-radius: 12px;
+            font-size: 0.9rem;
+            border-radius: 14px;
         }
 
         .admin-nav-link i { 
-            font-size: 1.25rem; 
-            margin-right: 14px; 
-            transition: transform 0.2s ease;
+            font-size: 1.3rem; 
+            margin-right: 15px; 
+            opacity: 0.7;
         }
 
         .admin-nav-link:hover {
             color: #ffffff;
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateX(5px);
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateX(4px);
         }
 
         .admin-nav-link.active {
             color: #ffffff;
-            background: var(--accent-color);
-            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.2);
+            background: var(--accent-emerald);
+            box-shadow: 0 12px 24px rgba(16, 185, 129, 0.25);
         }
 
-        .admin-nav-link.active i {
-            color: #ffffff;
+        .admin-nav-link.active i { opacity: 1; }
+
+        /* Report Center Special Styling */
+        .report-link.active {
+            background: var(--danger-main) !important;
+            box-shadow: 0 12px 24px rgba(225, 29, 72, 0.25) !important;
         }
 
-        /* --- MODERN MAIN SECTION --- */
+        /* --- GLASS HEADER --- */
         .admin-main {
             margin-left: var(--sidebar-width);
             min-height: 100vh;
@@ -103,11 +112,11 @@
         }
 
         .admin-header {
-            background: rgba(255, 255, 255, 0.85);
-            backdrop-filter: blur(12px);
-            padding: 0 40px;
+            background: var(--glass-white);
+            backdrop-filter: blur(15px);
+            padding: 0 45px;
             height: var(--header-height);
-            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -116,111 +125,143 @@
             z-index: 1000;
         }
 
-        /* --- CONTENT BODY --- */
-        .content-body {
-            padding: 40px;
-            flex: 1;
-            animation: fadeIn 0.5s ease-out;
+        .system-status {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 700;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            background: var(--accent-emerald);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
         }
 
         /* --- USER DROPDOWN --- */
-        .user-profile .btn {
+        .admin-profile-btn {
             background: #ffffff;
-            border: 1px solid #e2e8f0 !important;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-            transition: all 0.2s;
+            border: 1px solid #edf2f7 !important;
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-weight: 800;
+            font-size: 0.85rem;
+            color: var(--sidebar-dark);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+            transition: all 0.3s;
         }
 
-        .user-profile .btn:hover {
-            background: #f1f5f9;
-            transform: translateY(-1px);
+        .admin-profile-btn:hover {
+            background: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.05);
         }
 
-        .dropdown-menu {
-            border-radius: 15px;
-            border: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        /* --- CONTENT BODY --- */
+        .content-body {
+            padding: 45px;
+            flex: 1;
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1);
         }
 
-        /* Scrollbar Styling */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
 
+        /* --- FOOTER --- */
+        .admin-footer {
+            padding: 25px 45px;
+            background: white;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            text-align: center;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #94a3b8;
+        }
     </style>
 </head>
 <body>
 
-<div class="admin-sidebar">
+<aside class="admin-sidebar">
     <div class="brand-section text-white">
-        <i class="bi bi-leaf-fill me-2" style="color: var(--accent-color); filter: drop-shadow(0 0 5px var(--accent-color));"></i> 
-        <span>LT-AI <span class="fw-light" style="opacity: 0.6;">Admin</span></span>
+        <i class="bi bi-cpu-fill me-3" style="color: var(--accent-emerald);"></i> 
+        <span>LocalTask <span style="color: var(--accent-emerald)">AI</span></span>
     </div>
     
     <div class="nav-group">
         <a href="{% url 'admin_dashboard' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'admin_dashboard' %}active{% endif %}">
-            <i class="bi bi-grid-1x2-fill"></i> Overview
+            <i class="bi bi-intersect"></i> Overview
         </a>
 
         <a href="{% url 'admin_user_management' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'admin_user_management' %}active{% endif %}">
-            <i class="bi bi-people-fill"></i> Users
+            <i class="bi bi-person-vcard-fill"></i> User Directory
         </a>
 
         <a href="{% url 'admin_task_management' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'admin_task_management' %}active{% endif %}">
-            <i class="bi bi-clipboard2-check-fill"></i> Tasks
+            <i class="bi bi-stack"></i> Task Infrastructure
         </a>
 
         <a href="{% url 'location_management' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'location_management' %}active{% endif %}">
-            <i class="bi bi-geo-alt-fill"></i> Locations
+            <i class="bi bi-geo-fill"></i> Location Hub
         </a>
 
         <a href="{% url 'skill_management' %}" class="admin-nav-link {% if request.resolver_match.url_name == 'skill_management' %}active{% endif %}">
-            <i class="bi bi-tools"></i> Skills & Categories
+            <i class="bi bi-terminal-fill"></i> Skill Taxonomy
         </a>
 
-       <li class="nav-item">
-    <a class="nav-link rounded-3 px-3 py-2 d-flex align-items-center transition {% if request.resolver_match.url_name == 'admin_report_center' %}active bg-danger text-white shadow-sm{% else %}text-muted{% endif %}" 
-       href="{% url 'admin_report_center' %}">
-        <i class="bi bi-shield-exclamation-fill me-2"></i>
-        <span class="fw-bold">Report Center</span>
-    </a>
-</li>
-    </div>
-</div>
-
-<div class="admin-main">
-    <header class="admin-header">
-        <div class="search-bar">
-            <h5 class="fw-bold mb-0 text-dark">System Summary</h5>
-            <p class="text-muted small mb-0 d-none d-md-block">Real-time infrastructure monitoring</p>
+        <div class="mt-4 pt-4 border-top border-secondary border-opacity-25">
+            <a href="{% url 'admin_report_center' %}" class="admin-nav-link report-link {% if request.resolver_match.url_name == 'admin_report_center' %}active{% endif %}">
+                <i class="bi bi-shield-lock-fill"></i> Security Center
+            </a>
         </div>
-        <div class="user-profile dropdown">
-            <button class="btn border-0 rounded-pill px-3 py-2 d-flex align-items-center" 
-                    style="color: var(--sidebar-dark); font-weight: 700;" 
-                    data-bs-toggle="dropdown">
-                <i class="bi bi-shield-lock-fill me-2 fs-5 text-emerald-600"></i>
-                {{ user.name }}
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-3 p-2">
-                <li class="px-3 py-2 small text-muted">Role: <b>Administrator</b></li>
-                <li><hr class="dropdown-divider"></li>
-                <li><a class="dropdown-item text-danger rounded-2" href="{% url 'logout_user' %}">
-                    <i class="bi bi-box-arrow-right me-2"></i> Sign Out
-                </a></li>
-            </ul>
+    </div>
+</aside>
+
+<main class="admin-main">
+    <header class="admin-header">
+        <div class="system-summary d-flex flex-column">
+            <div class="system-status">
+                <div class="status-dot"></div>
+                <span class="text-dark">Cloud Environment Active</span>
+            </div>
+            <span class="text-muted smaller fw-600" style="font-size: 0.75rem;">Node ID: LT-AI-CORE-01</span>
+        </div>
+
+        <div class="d-flex align-items-center gap-3">
+            <div class="dropdown">
+                <button class="admin-profile-btn d-flex align-items-center gap-2 border-0" data-bs-toggle="dropdown">
+                    <img src="https://ui-avatars.com/api/?name={{ user.name }}&background=064e3b&color=fff" class="rounded-circle" width="28">
+                    <span>{{ user.name }}</span>
+                    <i class="bi bi-chevron-down small opacity-50"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-3 p-2 rounded-4">
+                    <li class="px-3 py-2 small text-muted">Signed in as <b>Admin</b></li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li><a class="dropdown-item text-danger rounded-3 fw-bold" href="{% url 'logout_user' %}">
+                        <i class="bi bi-power me-2"></i> Terminate Session
+                    </a></li>
+                </ul>
+            </div>
         </div>
     </header>
 
     <div class="content-body">
         {% block content %}{% endblock %}
     </div>
-</div>
+
+    <footer class="admin-footer">
+        &copy; 2026 LocalTask AI Neural Network | Intelligent Service Management
+    </footer>
+</main>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 

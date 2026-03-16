@@ -13,46 +13,107 @@ from django.dispatch import receiver
 from django.db.models import Count
 from django.db.models import Avg, Count
 from giver.models import Review  # Ensure this path matches where your Review model is
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import login_required
 
 
 # Security: Only allow Superusers to see this page
+
 def is_admin(user):
     return user.is_superuser
 
+
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def admin_dashboard(request):
-    # Gather stats for the dashboard
+    # 1. Total Users (Excluding superusers)
     total_users = User.objects.filter(is_superuser=False).count()
-    total_givers = User.objects.filter(role='giver').count()
-    total_doers = User.objects.filter(role='doer').count()
-    active_doers = User.objects.filter(role='doer', status='Active').count()
+    
+    # 2. No of Doers
+    no_of_doers = User.objects.filter(role='doer').count()
+    
+    # 3. No of Givers
+    no_of_givers = User.objects.filter(role='giver').count()
+    
+    # 4. Verified Doers
+    verified_doers = User.objects.filter(role='doer', approval_status='Accepted').count()
+    
+    # 5. Verified Givers
+    verified_givers = User.objects.filter(role='giver', approval_status='Accepted').count()
+    
+    # 6. Verification Status: Under Review
+    under_review_users = User.objects.filter(approval_status='Under Review').count()
+    
+    # 7. No of Open Tasks
+    no_of_open_tasks = Task.objects.filter(status='Open').count()
+    
+    # 8. No of Completed Tasks
+    no_of_completed_tasks = Task.objects.filter(status='Completed').count()
+    
+    # 9. No of Reported Accounts
+    # (Counts unique users who have at least one report against them)
+    no_of_reported_accounts = User.objects.annotate(
+        r_count=Count('reports_received')
+    ).filter(r_count__gt=0).count()
 
     context = {
         'total_users': total_users,
-        'total_givers': total_givers,
-        'total_doers': total_doers,
-        'active_doers': active_doers,
+        'no_of_doers': no_of_doers,
+        'no_of_givers': no_of_givers,
+        'verified_doers': verified_doers,
+        'verified_givers': verified_givers,
+        'under_review_users': under_review_users,
+        'no_of_open_tasks': no_of_open_tasks,
+        'no_of_completed_tasks': no_of_completed_tasks,
+        'no_of_reported_accounts': no_of_reported_accounts,
     }
     return render(request, 'adminpanel/dashboard.html', context)
 
 
-
+@login_required
+@never_cache
 @user_passes_test(is_admin)
+@user_passes_test(lambda u: u.is_superuser)
 def admin_user_management(request):
-    """
-    THIS WAS MISSING: This function handles the user list page and filtering.
-    """
-    # Get the filter status from URL, default to 'Under Review'
+    # 1. Get the filter status and search query from the URL
     status_filter = request.GET.get('status', 'Under Review')
+    search_query = request.GET.get('search', '').strip()
     
-    # Fetch users based on filter
-    users = User.objects.filter(approval_status=status_filter).exclude(is_superuser=True).order_by('-id')
-    
+    # 2. Define human-readable titles for the UI
+    filter_titles = {
+        'Under Review': 'Pending Requests',
+        'Accepted': 'Verified Users',
+        'Rejected': 'Rejected Applications',
+        'All': 'All Users'
+    }
+
+    # 3. Base Query: Exclude superusers and order by newest
+    users = User.objects.exclude(is_superuser=True).order_by('-id')
+
+    # 4. Apply Status Filter logic
+    if status_filter != 'All':
+        users = users.filter(approval_status=status_filter)
+
+    # 5. Apply Search logic (if search box is used)
+    if search_query:
+        from django.db.models import Q
+        users = users.filter(
+            Q(name__icontains=search_query) | 
+            Q(email__icontains=search_query) |
+            Q(adhar_card__icontains=search_query)
+        )
+
+    # 6. Return the CLEAN context (No unclosed braces here!)
     return render(request, 'adminpanel/user_management.html', {
         'users': users,
-        'current_filter': status_filter
+        'current_filter': status_filter,
+        'display_title': filter_titles.get(status_filter, status_filter),
+        'search_query': search_query,
     })
 
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def update_user_status(request, user_id, action):
     user_to_update = get_object_or_404(User, id=user_id)
@@ -77,6 +138,9 @@ def update_user_status(request, user_id, action):
     return redirect(f"{reverse('admin_user_management')}?status={current_filter}")
 
 
+
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def location_management(request):
     if request.method == "POST":
@@ -116,6 +180,9 @@ def location_management(request):
 
 # --- DELETE ACTIONS ---
 
+
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def delete_location(request, pk):
     """Deletes a specific Pincode"""
@@ -123,6 +190,9 @@ def delete_location(request, pk):
     pincode.delete()
     return redirect('location_management')
 
+
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def delete_place(request, pk):
     """Deletes a Place and all its associated Pincodes"""
@@ -130,6 +200,8 @@ def delete_place(request, pk):
     place.delete()
     return redirect('location_management')
 
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def delete_district(request, pk):
     """Deletes a District and EVERYTHING inside it (Places & Pincodes)"""
@@ -140,6 +212,8 @@ def delete_district(request, pk):
 
 
 
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def skill_management(request):
     if request.method == "POST":
@@ -167,11 +241,16 @@ def skill_management(request):
     }
     return render(request, 'adminpanel/skill_management.html', context)
 
+
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def delete_category(request, pk):
     get_object_or_404(Category, id=pk).delete()
     return redirect('skill_management')
 
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def delete_skill(request, pk):
     get_object_or_404(Skill, id=pk).delete()
@@ -179,8 +258,8 @@ def delete_skill(request, pk):
 
 
 
-
-
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def admin_task_management(request):
     user_id = request.GET.get('user_id')
@@ -197,6 +276,9 @@ def admin_task_management(request):
         'viewing_user': viewing_user
     })
 
+
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def admin_delete_task(request, pk):
     task = get_object_or_404(Task, id=pk)
@@ -215,7 +297,8 @@ def admin_delete_task(request, pk):
 
 
 
-
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def admin_report_center(request):
     """
@@ -248,6 +331,10 @@ def admin_report_center(request):
     ).filter(report_count__gt=0).order_by('-report_count')
 
     return render(request, 'adminpanel/report_center.html', {'reported_users': reported_users})
+
+
+@login_required
+@never_cache
 @user_passes_test(is_admin)
 def admin_investigate_user(request, user_id):
     """
