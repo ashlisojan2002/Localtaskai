@@ -82,10 +82,10 @@ def admin_user_management(request):
     
     # 2. Define human-readable titles for the UI
     filter_titles = {
-        'Under Review': 'Pending Requests',
+        'Under Review': 'Under Review',
         'Accepted': 'Verified Users',
         'Rejected': 'Rejected Applications',
-        'All': 'All Users'
+        'pending': 'pending'
     }
 
     # 3. Base Query: Exclude superusers and order by newest

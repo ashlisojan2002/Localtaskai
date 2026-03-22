@@ -1,6 +1,8 @@
 {% extends 'doer/base_doer.html' %}
 
 {% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
 <div class="container mt-4 mb-5">
     <div class="text-center mb-4">
         <h2>Professional Preferences</h2>
@@ -122,7 +124,20 @@
             cb.addEventListener('change', () => {
                 if (updateCount() > limit) {
                     cb.checked = false;
-                    alert(`Maximum ${limit} allowed!`);
+                    
+                    // DESIGNED ALERT BOX
+                    Swal.fire({
+                        title: 'Selection Limit!',
+                        text: `You can only choose up to ${limit} ${selector === '.skill-cb' ? 'skills' : 'locations'}.`,
+                        icon: 'warning',
+                        confirmButtonColor: '#198754',
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 3000,
+                        timerProgressBar: true
+                    });
+                    
                     updateCount();
                 }
             });
@@ -138,5 +153,11 @@
     .custom-check:hover { background: #f8f9fa; border-radius: 5px; }
     .pincode-item { background: #eee; padding: 2px 8px; border-radius: 4px; border: 1px solid #ddd; }
     #prefForm { padding-bottom: 80px; } /* Space for sticky button */
+    
+    /* Custom Styling for the Alert Popup font to match your theme */
+    .swal2-popup {
+        font-family: inherit !important;
+        font-size: 0.9rem !important;
+    }
 </style>
 {% endblock %}

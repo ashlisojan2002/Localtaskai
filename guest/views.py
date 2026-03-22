@@ -9,7 +9,10 @@ from django.conf import settings
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from accounts.models import User
+from django.views.decorators.cache import never_cache
+from django.views.decorators.cache import cache_page
 
+@cache_page(60 * 15)
 def index(request):
     return render(request, 'guest/index.html')
 
@@ -20,7 +23,7 @@ def index(request):
 
 
 
-
+@never_cache
 def register(request):
     if request.method == "POST":
         # --- 1. RESEND OTP LOGIC ---
@@ -124,7 +127,7 @@ def register(request):
 
 
 
-
+@never_cache
 def login_page(request):
     if request.method == "POST":
         email = request.POST.get('email')
@@ -164,7 +167,7 @@ def logout_user(request):
     return redirect('login_page')
 
 
-
+@never_cache
 def forgot_password(request):
     step = 1  # 1: Email, 2: OTP, 3: New Password
     
@@ -217,6 +220,6 @@ def forgot_password(request):
     return render(request, 'guest/forgot_password.html', {'step': step})
 
 
-
+@cache_page(60 * 60)
 def how_it_works(request):
     return render(request, 'guest/how_it_works.html')

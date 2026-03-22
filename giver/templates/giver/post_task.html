@@ -67,18 +67,21 @@
                     <div class="row g-4">
                         <div class="col-md-8">
                             <label class="form-label fw-semibold">Task Title</label>
-                            <input type="text" name="title" class="form-control" placeholder="e.g., Professional Home Cleaning" required>
+                            <input type="text" name="title" id="title" class="form-control" placeholder="e.g., Professional Home Cleaning" required>
+                            <div class="error-text" id="title-error" style="display:none; color:red; font-size:0.8rem;">Title must be at least 10 characters long.</div>
                         </div>
                         <div class="col-md-4">
                             <label class="form-label fw-semibold">Budget (₹)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-light">₹</span>
-                                <input type="number" name="budget" class="form-control" placeholder="0.00" required>
+                                <input type="number" name="budget" id="budget" class="form-control" placeholder="0.00" required>
                             </div>
+                            <div class="error-text" id="budget-error" style="display:none; color:red; font-size:0.8rem;">Minimum budget is ₹100.</div>
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Description</label>
-                            <textarea name="description" class="form-control" rows="4" placeholder="Briefly describe the job requirements..."></textarea>
+                            <textarea name="description" id="description" class="form-control" rows="4" placeholder="Briefly describe the job requirements..."></textarea>
+                            <div class="error-text" id="desc-error" style="display:none; color:red; font-size:0.8rem;">Please provide at least 30 characters of details.</div>
                         </div>
                     </div>
                 </div>
@@ -125,12 +128,12 @@
                             <select id="id_pincode" name="pincode" class="form-select" required disabled></select>
                         </div>
                         <div class="col-md-12">
-                            <label class="form-label fw-semibold text-primary">Deadline (When should this be finished?)</label>
+                            <label class="form-label fw-semibold text-primary">Deadline (Completion Date & Time)</label>
                             <div class="input-group">
                                 <span class="input-group-text bg-white"><i class="bi bi-calendar-event"></i></span>
-                                <input type="text" name="deadline_datetime" class="form-control datetimepicker" placeholder="Select completion date & time" required>
+                                <input type="text" name="deadline_datetime" id="deadline" class="form-control datetimepicker" placeholder="Select completion date & time" required readonly>
                             </div>
-                            <small class="text-muted">Note: Task will automatically expire once this deadline is reached.</small>
+                            <small class="text-muted">Task will expire automatically at this time.</small>
                         </div>
                     </div>
                 </div>
@@ -148,20 +151,86 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <script>
+    // Initialize DateTime Picker
     flatpickr(".datetimepicker", { 
         enableTime: true, 
         dateFormat: "Y-m-d H:i", 
-        minDate: "today",
+        minDate: "today", // Prevents selecting past days
         time_24hr: true 
     });
 
-    // --- Reuse your existing AJAX Logic here ---
+    const taskForm = document.getElementById('taskForm');
+    
+    taskForm.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Reset previous errors
+        $('.form-control, .form-select').css('border-color', '#e2e8f0');
+        $('.error-text').hide();
+
+        const title = $('#title').val().trim();
+        const budget = parseFloat($('#budget').val());
+        const desc = $('#description').val().trim();
+        const deadlineValue = $('#deadline').val();
+
+        // 1. Basic Length/Value Validations
+        if (title.length < 10) { showError('#title', '#title-error'); isValid = false; }
+        if (isNaN(budget) || budget < 100) { showError('#budget', '#budget-error'); isValid = false; }
+        if (desc.length < 30) { showError('#description', '#desc-error'); isValid = false; }
+
+        // 2. Dropdown Validations
+        const dropdowns = ['#id_category', '#id_skill', '#id_district', '#id_place', '#id_pincode'];
+        dropdowns.forEach(id => {
+            if ($(id).val() === "" || $(id).val() === null) {
+                $(id).css('border-color', 'red');
+                isValid = false;
+            }
+        });
+
+        // 3. CRITICAL DEADLINE VALIDATION (Prevents publishing if current time > deadline)
+        if (deadlineValue === "") {
+            $('#deadline').css('border-color', 'red');
+            isValid = false;
+        } else {
+            const selectedDate = new Date(deadlineValue);
+            const now = new Date();
+
+            if (selectedDate <= now) {
+                e.preventDefault();
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Invalid Deadline',
+                    text: 'The completion deadline must be a future time. You cannot publish a task that has already expired!',
+                    confirmButtonColor: '#2563eb'
+                });
+                return false;
+            }
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            Swal.fire({
+                icon: 'error',
+                title: 'Check Form Details',
+                text: 'Please fill in all required fields correctly.',
+                confirmButtonColor: '#2563eb'
+            });
+        }
+    });
+
+    function showError(inputField, errorText) {
+        $(inputField).css('border-color', 'red');
+        $(errorText).fadeIn();
+    }
+
+    // --- Dynamic Loaders ---
     $("#id_category").change(function() {
-        const url = "{% url 'ajax_load_skills' %}";
         $.ajax({
-            url: url, data: {'category_id': $(this).val()},
+            url: "{% url 'ajax_load_skills' %}", 
+            data: {'category_id': $(this).val()},
             success: function(data) {
                 let html = '<option value="">Select Skill</option>';
                 data.forEach(s => { html += `<option value="${s.id}">${s.skill_name}</option>`; });
@@ -171,9 +240,9 @@
     });
 
     $("#id_district").change(function() {
-        const url = "{% url 'ajax_load_places' %}";
         $.ajax({
-            url: url, data: {'district_id': $(this).val()},
+            url: "{% url 'ajax_load_places' %}", 
+            data: {'district_id': $(this).val()},
             success: function(data) {
                 let html = '<option value="">Select Place</option>';
                 data.forEach(p => { html += `<option value="${p.id}">${p.place_name}</option>`; });
@@ -183,9 +252,9 @@
     });
 
     $("#id_place").change(function() {
-        const url = "{% url 'ajax_load_pincodes' %}";
         $.ajax({
-            url: url, data: {'place_id': $(this).val()},
+            url: "{% url 'ajax_load_pincodes' %}", 
+            data: {'place_id': $(this).val()},
             success: function(data) {
                 let html = '<option value="">Select Pincode</option>';
                 data.forEach(pin => { html += `<option value="${pin.id}">${pin.pincode_number}</option>`; });

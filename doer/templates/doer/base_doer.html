@@ -184,6 +184,7 @@
                 <li><a href="{% url 'doer_task_feed' %}" class="{% if request.resolver_match.url_name == 'doer_task_feed' %}active-link{% endif %}"><i class="bi bi-search i-find"></i>Find Work</a></li>
                 <li><a href="{% url 'my_requests' %}" class="{% if request.resolver_match.url_name == 'my_requests' %}active-link{% endif %}"><i class="bi bi-send-check-fill i-apps"></i>Applications</a></li>
                 <li><a href="{% url 'doer_hired_jobs' %}" class="{% if request.resolver_match.url_name == 'doer_hired_jobs' %}active-link{% endif %}"><i class="bi bi-briefcase-fill i-hired"></i>Hired</a></li>
+                <li><a href="{% url 'doer_completed_history' %}" class="{% if request.resolver_match.url_name == 'doer_completed_history' %}active-link{% endif %}"><i class="bi bi-journal-check i-history"></i>History</a></li>
                 <li><a href="{% url 'doer_chat_inbox' %}" class="{% if 'messages' in request.path %}active-link{% endif %}"><i class="bi bi-chat-dots-fill i-msg"></i>Messages</a></li>
                 <li><a href="{% url 'manage_preferences' user.id %}"><i class="bi bi-sliders i-pref"></i>Preferences</a></li>
                 <li><a href="{% url 'doer_profile_view' %}"><i class="bi bi-person-badge-fill i-prof"></i>Profile</a></li>

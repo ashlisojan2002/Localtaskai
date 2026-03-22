@@ -24,12 +24,13 @@ from django.db.models import Avg, Count
 from accounts.models import User, UserReport
 from .utils import get_ai_recommended_doers
 from django.urls import reverse
+from django.views.decorators.cache import never_cache
+from django.utils import timezone
 
 
 
 
-
-
+@never_cache
 @login_required
 def giver_profile_view(request):
     # Calculate average rating received by the Giver
@@ -44,6 +45,7 @@ def giver_profile_view(request):
     }
     return render(request, 'giver/profile.html', context)
 
+@never_cache
 @login_required
 def giver_profile_edit(request):
     user = request.user
@@ -63,6 +65,7 @@ def giver_profile_edit(request):
 
     return render(request, 'giver/edit_profile.html')
 
+@never_cache
 @login_required
 def giver_change_password(request):
     if request.method == 'POST':
@@ -92,13 +95,15 @@ def giver_change_password(request):
 
     return render(request, 'giver/change_password.html')
 
+@never_cache
 @login_required
 def giver_account_delete(request):
     if request.method == 'POST':
         request.user.delete()
         messages.info(request, "Giver account successfully deleted.")
         return redirect('login_page')
-
+    
+@never_cache
 @login_required
 def giver_verification(request):
     user = request.user
@@ -153,7 +158,8 @@ def giver_verification(request):
 
 
 
-
+@never_cache
+@login_required
 def post_task(request):
     if request.method == "POST":
         # 1. Get the string from POST
@@ -208,17 +214,22 @@ def post_task(request):
     return render(request, 'giver/post_task.html', context)
 
 # --- AJAX Loaders for Dependent Dropdowns ---
-
+@never_cache
+@login_required
 def load_places(request):
     district_id = request.GET.get('district_id')
     places = Place.objects.filter(district_id=district_id).values('id', 'place_name')
     return JsonResponse(list(places), safe=False)
 
+@never_cache
+@login_required
 def load_pincodes(request):
     place_id = request.GET.get('place_id')
     pincodes = Pincode.objects.filter(place_id=place_id).values('id', 'pincode_number')
     return JsonResponse(list(pincodes), safe=False)
 
+@never_cache
+@login_required
 def load_skills(request):
     category_id = request.GET.get('category_id')
     skills = Skill.objects.filter(category_id=category_id).values('id', 'skill_name')
@@ -226,17 +237,29 @@ def load_skills(request):
 
 # --- Task Management ---
 
+@never_cache
+@login_required
 def my_tasks(request):
-    # Fetch tasks belonging to the logged-in giver
+    # 1. FORCE THE DATABASE TO UPDATE
+    # Find all 'Open' tasks for this giver and call save() to trigger the model logic
+    active_tasks = Task.objects.filter(giver=request.user, status='Open')
+    for task in active_tasks:
+        task.save() # This triggers your "if timezone.now() > deadline" logic!
+
+    # 2. FETCH THE UPDATED LIST
     tasks = Task.objects.filter(giver=request.user).order_by('-created_at')
-    status_filter = request.GET.get('status')
     
-    # 3. Apply filter if it's not empty
+    status_filter = request.GET.get('status')
     if status_filter:
         tasks = tasks.filter(status=status_filter)
-    # Make sure 'my_task.html' matches your actual filename
-    return render(request, 'giver/my_task.html', {'tasks': tasks})
+        
+    return render(request, 'giver/my_task.html', {
+        'tasks': tasks,
+        'today': timezone.now()
+    })
 
+@never_cache
+@login_required
 def delete_task(request, pk):
     # Get the task or return 404 if not found
     # We filter by giver=request.user to ensure only the owner can delete it
@@ -252,6 +275,7 @@ def delete_task(request, pk):
     
     return redirect('my_tasks')
 
+@never_cache
 @login_required
 def view_task_requests(request):
     # Fetch all tasks posted by this Giver
@@ -266,7 +290,7 @@ def view_task_requests(request):
 
 
 
-
+@never_cache
 @login_required
 def giver_chat_inbox(request, doer_id=None):
     # 1. Base Query for the Sidebar
@@ -350,7 +374,7 @@ def giver_chat_inbox(request, doer_id=None):
 
 
 
-
+@never_cache
 @login_required
 def hire_doer_ajax(request):
     if request.method == "POST":
@@ -381,7 +405,7 @@ def hire_doer_ajax(request):
 
 
 
-
+@never_cache
 @login_required
 def giver_complete_and_rate(request):
     if request.method == "POST":
@@ -409,7 +433,8 @@ def giver_complete_and_rate(request):
             # recalculate the Doer's Priority Score based on this rating.
 
         return JsonResponse({'status': 'success', 'message': 'Task closed and Doer rated!'})
-    
+
+@never_cache  
 @login_required
 def giver_hired_tasks(request):
     # Fetch tasks where a doer is assigned
@@ -422,6 +447,7 @@ def giver_hired_tasks(request):
         'hired_tasks': hired_tasks
     })
 
+@never_cache
 @login_required
 def public_giver_profile(request, giver_id):
     giver_user = get_object_or_404(User, id=giver_id)
@@ -473,26 +499,23 @@ def public_giver_profile(request, giver_id):
 
 
 
+@never_cache
 @login_required
 def ai_match_expert_page(request):
-    # 1. Fetch Giver's tasks that are either Open or currently Requested
     my_tasks = Task.objects.filter(giver=request.user, status__in=['Open', 'Requested'])
-    
     selected_task_id = request.GET.get('task_id')
     recommendations = []
     task = None
-    # Instead of invited_ids from a table, we check who is currently in the task.doer field
     current_requested_doer_id = None
 
     if selected_task_id:
         task = get_object_or_404(Task, id=selected_task_id, giver=request.user)
+        # Get our prioritized top 3 list
         recommendations = get_ai_recommended_doers(task) 
         
-        # If the task is already 'Requested', identify the doer so the UI can show "Pending"
         if task.status == 'Requested' and task.doer:
             current_requested_doer_id = task.doer.id
 
-    # Handle the "Schedule Job" Request
     if request.method == "POST":
         doer_id = request.POST.get('doer_id')
         t_id = request.POST.get('target_task_id')
@@ -500,25 +523,23 @@ def ai_match_expert_page(request):
         target_task = get_object_or_404(Task, id=t_id, giver=request.user)
         doer_user = get_object_or_404(User, id=doer_id)
         
-        # LOGIC CHANGE: Assign doer directly to Task and change status
         target_task.doer = doer_user
         target_task.status = 'Requested'
         target_task.save()
 
-        messages.success(request, f"Schedule request sent to {doer_user.name}!")
-        # Use reverse to ensure the redirect path is always correct
+        messages.success(request, f"Request sent to {doer_user.name}!")
         return redirect(reverse('ai_match_expert_page') + f'?task_id={t_id}')
 
     return render(request, 'giver/ai_match_page.html', {
         'my_tasks': my_tasks,
         'recommendations': recommendations,
         'selected_task': task,
-        'current_requested_doer_id': current_requested_doer_id # Pass this to HTML
+        'current_requested_doer_id': current_requested_doer_id 
     })
 
 
 
-
+@never_cache
 @login_required
 def giver_home(request):
     # 1. Direct Filter

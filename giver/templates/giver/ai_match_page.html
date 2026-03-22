@@ -3,32 +3,54 @@
 {% block content %}
 <div class="container py-5">
     {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show rounded-4 shadow-sm mb-4" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <div class="row justify-content-center">
+            <div class="col-lg-10">
+                {% for message in messages %}
+                    <div class="alert alert-dismissible fade show border-0 rounded-4 shadow-sm mb-4 px-4 py-3 d-flex align-items-center" 
+                         role="alert" 
+                         style="background: white; border-left: 5px solid {% if message.tags == 'success' %}#198754{% elif message.tags == 'error' %}#dc3545{% else %}#0d6efd{% endif %} !important;">
+                        <div class="flex-shrink-0 me-3">
+                            {% if message.tags == 'success' %}
+                                <i class="bi bi-check-circle-fill text-success fs-4"></i>
+                            {% else %}
+                                <i class="bi bi-info-circle-fill text-primary fs-4"></i>
+                            {% endif %}
+                        </div>
+                        <div class="flex-grow-1 text-dark fw-medium">{{ message }}</div>
+                        <button type="button" class="btn-close shadow-none" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
             </div>
-        {% endfor %}
+        </div>
     {% endif %}
 
     <div class="row justify-content-center">
         <div class="col-lg-10">
-            <div class="card border-0 shadow-sm rounded-4 p-4 mb-4">
-                <h4 class="fw-bold mb-3"><i class="bi bi-robot text-primary me-2"></i>AI Match Expert</h4>
+            <div class="card border-0 shadow-lg rounded-5 p-4 mb-5" style="background: linear-gradient(135deg, #ffffff 0%, #f8faff 100%);">
+                <div class="d-flex align-items-center mb-4">
+                    <div class="bg-primary bg-opacity-10 p-3 rounded-4 me-3 animate__animated animate__pulse animate__infinite">
+                        <i class="bi bi-robot text-primary fs-3"></i>
+                    </div>
+                    <div>
+                        <h3 class="fw-800 mb-0 text-dark" style="letter-spacing: -1px;">AI Expert Matcher</h3>
+                        <p class="text-muted small mb-0 fw-500">Scanning for the best local talent based on your task details...</p>
+                    </div>
+                </div>
+                
                 <form method="GET" action="" class="row g-3">
                     <div class="col-md-9">
-                        <select name="task_id" class="form-select form-select-lg rounded-pill border-2" required onchange="this.form.submit()">
-                            <option value="">-- Choose a Task to Find Experts --</option>
+                        <select name="task_id" class="form-select form-select-lg rounded-pill border-2 px-4 shadow-sm fw-600" required onchange="this.form.submit()" style="border-color: #e2e8f0;">
+                            <option value="">-- Select a Task to Begin AI Scan --</option>
                             {% for t in my_tasks %}
                                 <option value="{{ t.id }}" {% if selected_task.id == t.id %}selected{% endif %}>
-                                    {{ t.title }} (₹{{ t.budget }}) - Status: {{ t.status }}
+                                    {{ t.title }} (₹{{ t.budget }})
                                 </option>
                             {% endfor %}
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <button type="submit" class="btn btn-primary btn-lg rounded-pill w-100 fw-bold">
-                            Scan Now
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-lg rounded-pill w-100 fw-bold shadow-primary border-0 transition-all">
+                            <i class="bi bi-cpu-fill me-2"></i>RE-SCAN
                         </button>
                     </div>
                 </form>
@@ -37,11 +59,13 @@
             {% if selected_task %}
                 {% if recommendations %}
                 <div class="animate__animated animate__fadeIn">
-                    <div class="d-flex justify-content-between align-items-center mb-4">
-                        <h5 class="text-muted mb-0">Top 3 Matches for "{{ selected_task.title }}"</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-4 px-2">
+                        <h5 class="fw-800 text-dark mb-0">
+                            Recommended Experts for <span class="text-primary">"{{ selected_task.title }}"</span>
+                        </h5>
                         {% if selected_task.status == 'Requested' %}
-                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-3 py-2 rounded-pill">
-                                <i class="bi bi-hourglass-split me-1"></i> Waiting for Doer Response
+                            <span class="badge bg-warning text-dark border-0 px-3 py-2 rounded-pill shadow-sm fw-bold">
+                                <i class="bi bi-hourglass-split me-1"></i> REQUEST PENDING
                             </span>
                         {% endif %}
                     </div>
@@ -49,46 +73,94 @@
                     <div class="row g-4">
                         {% for item in recommendations %}
                         <div class="col-md-4">
-                            <div class="card border-0 shadow-sm rounded-4 p-4 text-center h-100 {% if selected_task.status == 'Requested' and item.user.id != current_requested_doer_id %}opacity-75{% endif %}">
-                                <div class="mb-3 position-relative d-inline-block mx-auto">
+                            <div class="card border-0 shadow-sm rounded-5 p-4 text-center h-100 position-relative transition-hover {% if selected_task.status == 'Requested' and item.user.id != current_requested_doer_id %}opacity-50 grayscale{% endif %}" style="background: white; border: 1px solid #f1f5f9 !important;">
+                                
+                                <div class="position-absolute top-0 start-0 m-3">
+                                    <span class="badge {% if forloop.first %}bg-primary shadow-primary{% else %}bg-dark{% endif %} rounded-pill px-3 py-2 fw-bold" style="font-size: 0.65rem;">
+                                        #{{ forloop.counter }} MATCH
+                                    </span>
+                                </div>
+
+                                <div class="mb-3 mt-3 position-relative d-inline-block mx-auto">
                                     <a href="{% url 'public_doer_profile' item.user.id %}" class="text-decoration-none">
                                         {% if item.user.photo %}
-                                            <img src="{{ item.user.photo.url }}" class="rounded-circle border border-3 border-white shadow-sm" style="width: 90px; height: 90px; object-fit: cover;">
+                                            <img src="{{ item.user.photo.url }}" class="rounded-circle border border-4 border-white shadow-sm" style="width: 110px; height: 110px; object-fit: cover;">
                                         {% else %}
-                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 90px; height: 90px;">
-                                                <i class="bi bi-person h2 mb-0 text-muted"></i>
+                                            <div class="rounded-circle bg-light d-flex align-items-center justify-content-center mx-auto shadow-sm" style="width: 110px; height: 110px;">
+                                                <i class="bi bi-person-fill h1 mb-0 text-muted"></i>
                                             </div>
                                         {% endif %}
-                                        
-                                        {% if item.user.approval_status == 'Approved' %}
-                                        <div class="position-absolute bottom-0 end-0 bg-white rounded-circle shadow-sm" style="width: 25px; height: 25px; margin-right: 2px; margin-bottom: 2px;">
-                                            <i class="bi bi-patch-check-fill text-primary" style="font-size: 20px;"></i>
-                                        </div>
+                                        {% if item.user.approval_status == 'Accepted' %}
+                                            <div class="position-absolute bottom-0 end-0 bg-white rounded-circle shadow-sm p-1" style="transform: translate(-10%, -10%);">
+                                                <i class="bi bi-patch-check-fill text-primary fs-4"></i>
+                                            </div>
                                         {% endif %}
                                     </a>
                                 </div>
 
-                                <h6 class="fw-bold mb-1">{{ item.user.name }}</h6>
-                                <p class="text-warning small mb-3"><i class="bi bi-star-fill"></i> {{ item.avg_rating|floatformat:1 }}</p>
+                                <h5 class="fw-800 mb-1 text-dark">{{ item.user.name|default:item.user.username }}</h5>
+                                
+                                <div class="mb-2">
+                                    <span class="badge bg-info-subtle text-info rounded-pill px-2 py-1 extra-small fw-bold">
+                                        {% if forloop.first %}TOP RELEVANCE{% elif item.score > 150 %}LOCAL EXPERT{% else %}VERIFIED MATCH{% endif %}
+                                    </span>
+                                </div>
 
-                                <div class="d-grid gap-2">
-                                    <a href="{% url 'giver_chat_inbox' item.user.id %}" class="btn btn-sm btn-outline-primary rounded-pill">Message</a>
+                                <div class="d-flex justify-content-center align-items-center gap-2 mb-3">
+                                    <span class="text-warning fw-bold small"><i class="bi bi-star-fill"></i> {{ item.avg_rating|floatformat:1 }}</span>
+                                    <span class="text-muted opacity-50">|</span>
+                                    <span class="text-muted small fw-600 text-truncate" style="max-width: 100px;">
+                                        {{ item.user.doer_locations.first.pincode.place.place_name }}
+                                    </span>
+                                </div>
+
+                                <div class="mb-4 bg-light p-2 rounded-4">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <span class="text-muted extra-small fw-bold">AI CONFIDENCE</span>
+                                        <span class="text-primary extra-small fw-bold">{{ item.match_percentage }}%</span>
+                                    </div>
+                                    <div class="progress rounded-pill" style="height: 7px; background-color: #e2e8f0;">
+                                        <div class="progress-bar progress-bar-striped progress-bar-animated rounded-pill" 
+                                             role="progressbar" 
+                                             style="width: {{ item.match_percentage }}%; background: linear-gradient(to right, #2563eb, #3b82f6);"></div>
+                                    </div>
+                                </div>
+
+                                <div class="d-grid gap-2 mt-auto">
+                                    <a href="{% url 'giver_chat_inbox' item.user.id %}" class="btn btn-sm btn-outline-primary rounded-pill fw-bold py-2 border-2">
+                                        <i class="bi bi-chat-dots-fill me-1"></i> MESSAGE
+                                    </a>
                                     
                                     {% if selected_task.status == 'Requested' %}
                                         {% if item.user.id == current_requested_doer_id %}
-                                            <button class="btn btn-sm btn-warning rounded-pill fw-bold" disabled>
-                                                <i class="bi bi-clock me-1"></i> Pending Approval
+                                            <button class="btn btn-sm btn-warning rounded-pill fw-bold py-2" disabled>
+                                                <i class="bi bi-clock-history me-1"></i> AWAITING APPROVAL
                                             </button>
                                         {% else %}
-                                            <button class="btn btn-sm btn-light rounded-pill" disabled>Task Busy</button>
+                                            <button class="btn btn-sm btn-light rounded-pill text-muted py-2" disabled>LOCKED</button>
                                         {% endif %}
                                     {% else %}
-                                        <form method="POST" action="">
-                                            {% csrf_token %}
-                                            <input type="hidden" name="doer_id" value="{{ item.user.id }}">
-                                            <input type="hidden" name="target_task_id" value="{{ selected_task.id }}">
-                                            <button type="submit" class="btn btn-sm btn-success rounded-pill fw-bold w-100">Schedule Job</button>
-                                        </form>
+                                        <div style="position: relative; height: 38px; overflow: hidden;" class="rounded-pill shadow-sm">
+                                            <button type="button" 
+                                                    id="btn-init-{{ item.user.id }}"
+                                                    onclick="toggleAction('{{ item.user.id }}', true)"
+                                                    class="btn btn-sm btn-success rounded-pill fw-bold w-100 h-100 border-0 transition-all"
+                                                    style="background: #059669;">
+                                                SCHEDULE JOB
+                                            </button>
+
+                                            <form method="POST" action="" id="form-{{ item.user.id }}" 
+                                                  class="d-none animate__animated m-0 position-absolute top-0 start-0 w-100 h-100">
+                                                {% csrf_token %}
+                                                <input type="hidden" name="doer_id" value="{{ item.user.id }}">
+                                                <input type="hidden" name="target_task_id" value="{{ selected_task.id }}">
+                                                
+                                                <div class="d-flex h-100">
+                                                    <button type="button" onclick="toggleAction('{{ item.user.id }}', false)" class="btn btn-dark flex-grow-1 rounded-0 border-0 fw-bold" style="font-size: 0.65rem; background: #1e293b;">CANCEL</button>
+                                                    <button type="submit" class="btn btn-success flex-grow-1 rounded-0 border-0 fw-bold" style="font-size: 0.65rem; background: #10b981;">YES, SEND</button>
+                                                </div>
+                                            </form>
+                                        </div>
                                     {% endif %}
                                 </div>
                             </div>
@@ -97,28 +169,70 @@
                     </div>
                 </div>
                 {% else %}
-                <div class="text-center py-5 card border-0 shadow-sm rounded-4 animate__animated animate__fadeIn">
-                    <i class="bi bi-search-heart text-muted display-1 opacity-25"></i>
-                    <h5 class="mt-3 fw-bold text-muted">No Matches Found</h5>
-                    <p class="text-muted">We couldn't find a Doer with the required skills in your area yet.</p>
+                <div class="text-center py-5 card border-0 shadow-sm rounded-5 mt-4 bg-white">
+                    <div class="bg-light d-inline-flex p-4 rounded-circle mb-3">
+                        <i class="bi bi-person-exclamation text-muted display-4"></i>
+                    </div>
+                    <h5 class="fw-800 text-dark">No High-Priority Matches</h5>
+                    <p class="text-muted px-5 fw-500">The AI couldn't find verified experts matching your exact requirements in this area. Try widening your search or checking a different category.</p>
                 </div>
                 {% endif %}
+
             {% elif my_tasks %}
-                <div class="text-center py-5 card border-0 shadow-sm rounded-4">
-                    <p class="text-muted mb-0">Select one of your posted tasks above to start the AI Scan.</p>
+                <div class="text-center py-5 card border-0 shadow-sm rounded-5 opacity-75 bg-white border-dashed">
+                    <i class="bi bi-stars text-primary display-4 mb-3"></i>
+                    <p class="text-dark mb-0 fw-800">Select one of your tasks above to trigger the AI Matcher.</p>
                 </div>
             {% else %}
-                <div class="alert alert-info rounded-4 border-0 shadow-sm p-4">
-                    <div class="d-flex align-items-center">
-                        <i class="bi bi-info-circle-fill fs-3 me-3"></i>
-                        <div>
-                            <h6 class="fw-bold mb-1">No Open Tasks</h6>
-                            <p class="mb-0">You don't have any open tasks to scan. Post a task first to see recommendations!</p>
-                        </div>
+                <div class="alert alert-info rounded-5 border-0 shadow-sm p-4 d-flex align-items-center bg-white">
+                    <i class="bi bi-info-circle-fill fs-2 me-4 text-primary"></i>
+                    <div>
+                        <h6 class="fw-800 mb-1 text-dark">No Active Tasks Found</h6>
+                        <p class="mb-0 text-muted fw-500">You need to post a task before the AI can find experts for you. <a href="{% url 'post_task' %}" class="fw-bold text-primary">Create Task</a></p>
                     </div>
                 </div>
             {% endif %}
         </div>
     </div>
 </div>
+
+<script>
+    function toggleAction(id, isConfirming) {
+        const initBtn = document.getElementById('btn-init-' + id);
+        const form = document.getElementById('form-' + id);
+
+        if (isConfirming) {
+            initBtn.classList.add('d-none');
+            form.classList.remove('d-none');
+            form.classList.add('animate__fadeInUp');
+        } else {
+            form.classList.add('d-none');
+            form.classList.remove('animate__fadeInUp');
+            initBtn.classList.remove('d-none');
+            initBtn.classList.add('animate__fadeIn');
+        }
+    }
+</script>
+
+<style>
+    .fw-800 { font-weight: 800; }
+    .fw-600 { font-weight: 600; }
+    .fw-500 { font-weight: 500; }
+    
+    .transition-hover {
+        transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), box-shadow 0.3s ease;
+    }
+    .transition-hover:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 20px 40px rgba(0,0,0,0.1) !important;
+    }
+    .shadow-primary {
+        box-shadow: 0 10px 20px rgba(13, 110, 253, 0.2);
+    }
+    .border-dashed { border: 2px dashed #e2e8f0 !important; }
+    .grayscale { filter: grayscale(0.8); }
+    .extra-small { font-size: 0.62rem; letter-spacing: 0.5px; text-transform: uppercase; }
+    .transition-all { transition: all 0.3s ease; }
+    .btn-primary:hover { transform: scale(1.02); filter: brightness(1.1); }
+</style>
 {% endblock %}

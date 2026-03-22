@@ -14,13 +14,18 @@
                 <button class="btn btn-white border shadow-sm dropdown-toggle px-4 py-2 fw-semibold" type="button" data-bs-toggle="dropdown">
                     <i class="bi bi-funnel me-2 text-primary"></i>Status: <strong>{{ display_title }}</strong>
                 </button>
-                <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
-                    <li><a class="dropdown-item rounded {% if current_filter == 'Under Review' %}active{% endif %}" href="?status=Under Review">Under Review</a></li>
-                    <li><a class="dropdown-item rounded {% if current_filter == 'Accepted' %}active{% endif %}" href="?status=Accepted">Accepted</a></li>
-                    <li><a class="dropdown-item rounded {% if current_filter == 'Rejected' %}active{% endif %}" href="?status=Rejected">Rejected</a></li>
-                    <li><hr class="dropdown-divider"></li>
+              <ul class="dropdown-menu dropdown-menu-end shadow border-0 p-2">
+    <li><a class="dropdown-item rounded {% if current_filter == 'All' %}active{% endif %}" href="?status=All">All Users</a></li>
+    <li><hr class="dropdown-divider"></li>
 
-                </ul>
+    <li><a class="dropdown-item rounded {% if current_filter == 'pending' %}active{% endif %}" href="?status=pending">Pending Submission</a></li>
+
+    <li><a class="dropdown-item rounded {% if current_filter == 'Under Review' %}active{% endif %}" href="?status=Under Review">Under Review</a></li>
+
+    <li><a class="dropdown-item rounded {% if current_filter == 'Accepted' %}active{% endif %}" href="?status=Accepted">Verified Users</a></li>
+
+    <li><a class="dropdown-item rounded {% if current_filter == 'Rejected' %}active{% endif %}" href="?status=Rejected">Rejected Applications</a></li>
+</ul>
             </div>
         </div>
     </div>
@@ -93,15 +98,25 @@
                             </div>
                         </td>
 
-                        <td class="text-center">
-                            {% if u.approval_status == 'Accepted' %}
-                                <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">Approved</span>
-                            {% elif u.approval_status == 'Rejected' %}
-                                <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill">Rejected</span>
-                            {% else %}
-                                <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill">Under Review</span>
-                            {% endif %}
-                        </td>
+                       <td class="text-center">
+    {% if u.approval_status == 'Accepted' %}
+        <span class="badge bg-success bg-opacity-10 text-success border border-success border-opacity-25 px-3 py-2 rounded-pill">
+            Approved
+        </span>
+    {% elif u.approval_status == 'Rejected' %}
+        <span class="badge bg-danger bg-opacity-10 text-danger border border-danger border-opacity-25 px-3 py-2 rounded-pill">
+            Rejected
+        </span>
+    {% elif u.approval_status == 'pending' %}
+        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary border-opacity-25 px-3 py-2 rounded-pill">
+            Pending Submission
+        </span>
+    {% else %}
+        <span class="badge bg-warning bg-opacity-10 text-warning border border-warning border-opacity-25 px-3 py-2 rounded-pill">
+            Under Review
+        </span>
+    {% endif %}
+</td>
 
                         <td class="text-end pe-4">
                             <div class="d-flex justify-content-end gap-2">

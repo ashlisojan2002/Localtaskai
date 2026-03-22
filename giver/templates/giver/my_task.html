@@ -7,22 +7,12 @@
     
     <div class="row mb-5 align-items-end animate__animated animate__fadeIn">
         <div class="col-md-7">
-            <span class="badge bg-soft-emerald text-success px-3 py-2 rounded-pill mb-2 fw-bold text-uppercase ls-1">Live Dashboard</span>
+            <span class="badge bg-soft-emerald text-success px-3 py-2 rounded-pill mb-2 fw-bold text-uppercase ls-1">Live Feed</span>
             <h2 class="fw-900 text-dark mb-1 display-6">Mission <span class="text-gradient">Control</span></h2>
-            <p class="text-muted fw-500 mb-0">Directly manage and terminate your active task streams.</p>
+            <p class="text-muted fw-500 mb-0">Manage your active task streams currently visible to the network.</p>
         </div>
         <div class="col-md-5 mt-4 mt-md-0">
             <div class="d-flex gap-3 justify-content-md-end align-items-center">
-                <form method="GET" class="glass-filter px-3 py-2 d-flex align-items-center">
-                    <i class="bi bi-sliders2-vertical text-emerald me-2"></i>
-                    <select name="status" class="form-select border-0 bg-transparent fw-800 small py-0" style="min-width: 140px; box-shadow: none;" onchange="this.form.submit()">
-                        <option value="">All Streams</option>
-                        <option value="Open" {% if request.GET.status == 'Open' %}selected{% endif %}>Active Open</option>
-                        <option value="Requested" {% if request.GET.status == 'Requested' %}selected{% endif %}>Requested</option>
-                        <option value="Accepted" {% if request.GET.status == 'Accepted' %}selected{% endif %}>Expert Hired</option>
-                        <option value="Completed" {% if request.GET.status == 'Completed' %}selected{% endif %}>Completed</option>
-                    </select>
-                </form>
                 <a href="{% url 'post_task' %}" class="btn btn-emerald-gradient rounded-pill px-4 py-2 fw-800 shadow-glow transition">
                     <i class="bi bi-plus-lg me-1"></i> New Task
                 </a>
@@ -32,72 +22,66 @@
 
     <div class="row g-4">
         {% for task in tasks %}
-        <div class="col-xl-4 col-md-6 animate__animated animate__fadeInUp" style="animation-delay: {{ forloop.counter0|add:1 }}00ms;">
-            <div class="card premium-task-card h-100 border-0 shadow-sm transition">
-                <div class="status-accent {% if task.status == 'Open' %}bg-success{% elif task.status == 'Requested' %}bg-warning{% elif task.status == 'Accepted' %}bg-primary{% else %}bg-secondary{% endif %}"></div>
-                
-                <div class="card-body p-4">
-                    <div class="d-flex justify-content-between align-items-start mb-4">
-                        <div class="status-chip px-3 py-1 rounded-pill">
-                            {% if task.status == 'Open' %}
-                                <span class="text-success small fw-800"><span class="pulse-dot"></span> Open</span>
-                            {% elif task.status == 'Requested' %}
-                                <span class="text-warning small fw-800"><i class="bi bi-clock-history me-1"></i> Waiting</span>
-                            {% elif task.status == 'Accepted' %}
-                                <span class="text-primary small fw-800"><i class="bi bi-check-circle-fill me-1"></i> Hired</span>
-                            {% else %}
-                                <span class="text-muted small fw-800">{{ task.status }}</span>
-                            {% endif %}
+            {% if task.status == 'Open' %}
+            <div class="col-xl-4 col-md-6 animate__animated animate__fadeInUp">
+                <div class="card premium-task-card h-100 border-0 shadow-sm transition">
+                    <div class="status-accent bg-success"></div>
+                    
+                    <div class="card-body p-4">
+                        <div class="d-flex justify-content-between align-items-start mb-4">
+                            <div class="status-chip px-3 py-1 rounded-pill">
+                                <span class="text-success small fw-800"><span class="pulse-dot"></span> Active & Open</span>
+                            </div>
+
+                            <div class="dropdown">
+                                <button class="btn btn-action-trigger" data-bs-toggle="dropdown">
+                                    <i class="bi bi-three-dots"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 overflow-hidden">
+                                    <li><a class="dropdown-item py-3 fw-bold small text-danger" href="#" onclick="confirmDelete(event, '{% url 'delete_task' task.id %}')">
+                                        <i class="bi bi-trash3-fill me-2"></i>Terminate Task</a>
+                                    </li>
+                                </ul>
+                            </div>
                         </div>
 
-                        <div class="dropdown">
-                            <button class="btn btn-action-trigger" data-bs-toggle="dropdown">
-                                <i class="bi bi-three-dots"></i>
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-4 overflow-hidden">
-                                <li><a class="dropdown-item py-3 fw-bold small text-danger" href="#" onclick="confirmDelete(event, '{% url 'delete_task' task.id %}')">
-                                    <i class="bi bi-trash3-fill me-2"></i>Terminate Task</a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
+                        <h5 class="fw-900 text-dark mb-2 text-truncate-2 text-capitalize">{{ task.title }}</h5>
+                        <p class="text-muted small mb-4 line-clamp-2">{{ task.description|truncatewords:12 }}</p>
 
-                    <h5 class="fw-900 text-dark mb-2 text-truncate-2 text-capitalize">{{ task.title }}</h5>
-                    <p class="text-muted small mb-4 line-clamp-2">{{ task.description|truncatewords:15 }}</p>
+                        <div class="d-flex gap-2 mb-4">
+                            <div class="info-capsule bg-soft-blue text-primary">
+                                <i class="bi bi-bookmark-star-fill me-1"></i>{{ task.category.category_name }}
+                            </div>
+                            <div class="info-capsule bg-soft-red text-danger">
+                                <i class="bi bi-geo-alt-fill me-1"></i>{{ task.district.district_name }}
+                            </div>
+                        </div>
 
-                    <div class="d-flex gap-2 mb-4">
-                        <div class="info-capsule bg-soft-blue text-primary">
-                            <i class="bi bi-bookmark-star-fill me-1"></i>{{ task.category.category_name }}
-                        </div>
-                        <div class="info-capsule bg-soft-red text-danger">
-                            <i class="bi bi-geo-alt-fill me-1"></i>{{ task.district.district_name }}
-                        </div>
-                    </div>
-
-                    <div class="d-flex justify-content-between align-items-center pt-3 mt-auto border-top-dashed">
-                        <div>
-                            <span class="text-muted-ls fw-800">Budget Allocation</span>
-                            <div class="text-success fw-900 fs-4">₹{{ task.budget|floatformat:0 }}</div>
-                        </div>
-                        <div class="text-end">
-                            <span class="text-muted-ls fw-800">Deadline</span>
-                            <div class="text-dark fw-bold small"><i class="bi bi-calendar3 text-emerald me-1"></i>{{ task.deadline_datetime|date:"d M" }}</div>
+                        <div class="d-flex justify-content-between align-items-center pt-3 mt-auto border-top-dashed">
+                            <div>
+                                <span class="text-muted-ls fw-800">Budget Allocation</span>
+                                <div class="text-success fw-900 fs-4">₹{{ task.budget|floatformat:0 }}</div>
+                            </div>
+                            <div class="text-end">
+                                <span class="text-muted-ls fw-800">Deadline</span>
+                                <div class="text-dark fw-bold small"><i class="bi bi-calendar3 text-emerald me-1"></i>{{ task.deadline_datetime|date:"d M" }}</div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+            {% endif %}
         {% empty %}
-        <div class="col-12 py-5 text-center">
-            <div class="empty-state-card py-5 rounded-5 shadow-sm bg-white border">
-                <div class="empty-icon-box mx-auto mb-4" style="font-size: 3rem;">
-                    <i class="bi bi-cloud-plus-fill text-emerald"></i>
+            <div class="col-12 py-5 text-center">
+                <div class="empty-state-card py-5 rounded-5 shadow-sm bg-white border">
+                    <div class="empty-icon-box mx-auto mb-4" style="font-size: 3rem;">
+                        <i class="bi bi-cloud-plus-fill text-emerald"></i>
+                    </div>
+                    <h3 class="fw-900">Your feed is clear</h3>
+                    <p class="text-muted">Start by deploying your first task requirement to our network.</p>
+                    <a href="{% url 'post_task' %}" class="btn btn-emerald-gradient rounded-pill px-5 py-3 mt-3 fw-800">Deploy New Mission</a>
                 </div>
-                <h3 class="fw-900">Your feed is clear</h3>
-                <p class="text-muted">Start by deploying your first task requirement to our network.</p>
-                <a href="{% url 'post_task' %}" class="btn btn-emerald-gradient rounded-pill px-5 py-3 mt-3 fw-800">Deploy New Mission</a>
             </div>
-        </div>
         {% endfor %}
     </div>
 </div>
@@ -111,14 +95,6 @@
         background: var(--main-gradient);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-    }
-
-    .glass-filter {
-        background: rgba(255, 255, 255, 0.7);
-        backdrop-filter: blur(10px);
-        border: 2px solid #10b981;
-        border-radius: 50px;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
     }
 
     .btn-emerald-gradient {

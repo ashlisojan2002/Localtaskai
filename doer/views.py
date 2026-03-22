@@ -21,6 +21,7 @@ from django.db import transaction
 from django.db.models import Avg, Count
 from accounts.models import User, UserReport
 from giver.models import Task
+from django.db.models import Q, Max, Count, Avg
 
 User = get_user_model()
 from django.db.models import Q
@@ -314,68 +315,6 @@ def my_task_requests_view(request):
 
 
 @login_required
-def doer_chat_inbox(request, giver_id=None):
-    # 1. Sidebar Logic: Filter unique givers and check approval status
-    applications = TaskRequest.objects.filter(doer=request.user).select_related('task', 'task__giver')
-    
-    unique_givers = []
-    seen_giver_ids = set()
-    for app in applications:
-        if app.task.giver.id not in seen_giver_ids:
-            # Check if ANY task from this giver has been accepted
-            app.is_accepted = applications.filter(task__giver=app.task.giver, status="accepted").exists()
-            unique_givers.append(app)
-            seen_giver_ids.add(app.task.giver.id)
-
-    other_user = None
-    chat_history = []
-    room_id = ""
-    active_app_accepted = False
-    
-    # 2. Process active chat
-    if giver_id:
-        other_user = get_object_or_404(User, id=giver_id)
-        user_ids = sorted([request.user.id, other_user.id])
-        room_id = f"{user_ids[0]}_{user_ids[1]}"
-        
-        # Check if the currently selected giver has accepted the doer
-        active_app_accepted = applications.filter(task__giver=other_user, status="accepted").exists()
-        
-        raw_messages = Message.objects.filter(
-            (Q(sender=request.user) & Q(receiver=other_user)) | 
-            (Q(sender=other_user) & Q(receiver=request.user))
-        ).order_by('timestamp')
-        
-        for msg in raw_messages:
-            try:
-                
-                # IMPORTANT: Decryption logic remains untouched
-                encrypted_data = msg.encrypted_content
-                if isinstance(encrypted_data, str):
-                    encrypted_data = encrypted_data.encode()
-                content = decrypt_message(encrypted_data)
-            except Exception:
-                content = "[Encrypted Message]"
-            
-            chat_history.append({
-                'sender': msg.sender.name, 
-                'content': content,
-                'is_seen': msg.is_seen, # Message seen status logic preserved
-                'timestamp': msg.timestamp
-            })
-
-    # "Active Now" threshold logic removed as requested
-    return render(request, 'doer/chat_inbox.html', {
-        'applications': unique_givers, 
-        'other_user': other_user,
-        'chat_history': chat_history,
-        'room_id': room_id,
-        'active_app_accepted': active_app_accepted,
-    })
-
-
-
-@login_required
 def doer_hired_jobs(request):
     # Get IDs of tasks the Doer has already rated
     rated_tasks = Review.objects.filter(reviewer=request.user).values_list('task_id', flat=True)
@@ -633,3 +572,90 @@ def doer_home(request):
     }
     
     return render(request, 'doer/home.html', context)
+
+
+
+
+
+@login_required
+def doer_chat_inbox(request, giver_id=None):
+    # 1. Get all Givers the Doer has interacted with (via TaskRequests)
+    # We annotate each Giver with the timestamp of the LATEST message exchanged
+    interactions = User.objects.filter(
+        Q(sent_messages__receiver=request.user) | Q(received_messages__sender=request.user)
+    ).annotate(
+        last_message_time=Max('sent_messages__timestamp'),
+        # Count unread messages from this specific giver
+        unread_count=Count('sent_messages', filter=Q(sent_messages__receiver=request.user, sent_messages__is_seen=False))
+    ).order_by('-last_message_time') # HIGHEST PRIORITY: Latest message at the top
+
+    # Fallback: If no messages exist yet, show Givers from TaskRequests
+    if not interactions.exists():
+        interactions = User.objects.filter(giver_tasks__taskrequest__doer=request.user).distinct()
+
+    other_user = None
+    chat_history = []
+    room_id = ""
+    
+    if giver_id:
+        other_user = get_object_or_404(User, id=giver_id)
+        user_ids = sorted([request.user.id, other_user.id])
+        room_id = f"{user_ids[0]}_{user_ids[1]}"
+        
+        # Mark messages as SEEN when opening the chat
+        Message.objects.filter(sender=other_user, receiver=request.user, is_seen=False).update(is_seen=True)
+        
+        # Get message history (Limit to last 50 for performance)
+        raw_messages = Message.objects.filter(
+            (Q(sender=request.user) & Q(receiver=other_user)) | 
+            (Q(sender=other_user) & Q(receiver=request.user))
+        ).order_by('timestamp') # Oldest at top, newest at bottom of bubble list
+
+        for msg in raw_messages:
+            try:
+                content = decrypt_message(msg.encrypted_content.encode() if isinstance(msg.encrypted_content, str) else msg.encrypted_content)
+            except:
+                content = "[Encrypted Message]"
+            
+            chat_history.append({
+                'sender': msg.sender.name, 
+                'sender_id': msg.sender.id,
+                'content': content,
+                'timestamp': msg.timestamp
+            })
+
+    return render(request, 'doer/chat_inbox.html', {
+        'interactions': interactions, # Use this for sidebar
+        'other_user': other_user,
+        'chat_history': chat_history,
+        'room_id': room_id,
+    })
+
+@login_required
+def submit_task_for_approval(request):
+    """
+    PASTE THIS IN YOUR DOER VIEWS.
+    This is the missing link that 'notifies' the Giver.
+    """
+    if request.method == "POST":
+        task_id = request.POST.get('task_id')
+        
+        # 1. Get the task
+        task = get_object_or_404(Task, id=task_id)
+
+        # 2. Security: Ensure only the assigned doer can complete it
+        if task.doer != request.user:
+            return JsonResponse({'status': 'error', 'message': 'Unauthorized'}, status=403)
+
+        # 3. Update the TaskRequest (The record the Giver template is watching)
+        from .models import TaskRequest
+        req, created = TaskRequest.objects.get_or_create(
+            task=task, 
+            doer=request.user
+        )
+        req.status = 'Completed'
+        req.save()
+
+        return JsonResponse({'status': 'success', 'message': 'Work submitted for review!'})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request'}, status=400)

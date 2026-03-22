@@ -106,17 +106,24 @@
         </div>
 
         <div class="col-lg-4">
-            
             <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
                 <h6 class="fw-800 text-muted small text-uppercase mb-4 ls-1">Quick Scan</h6>
                 
-                {% if user.approval_status == 'Approved' %}
+                {% if user.approval_status == 'Accepted' %}
                     <div class="bg-light p-3 rounded-4 mb-3 border-start border-4 border-primary">
                         <h6 class="fw-bold mb-1">AI Recommendation</h6>
                         <p class="small text-muted mb-3">Our AI finds experts based on your task details.</p>
                         <a href="{% url 'ai_match_expert_page' %}" class="btn btn-primary w-100 rounded-pill fw-bold py-2 shadow-sm">
                             <i class="bi bi-robot me-2"></i>Try AI Match
                         </a>
+                    </div>
+                {% elif user.approval_status == 'Under Review' %}
+                    <div class="bg-light p-3 rounded-4 mb-3 border-start border-4 border-warning opacity-75">
+                        <h6 class="fw-bold mb-1 text-warning"><i class="bi bi-hourglass-split me-1"></i> Verification Pending</h6>
+                        <p class="small text-muted mb-3">Your documents are under review. AI Match will unlock once approved.</p>
+                        <button class="btn btn-warning w-100 rounded-pill fw-bold py-2 shadow-sm text-white" disabled>
+                            Pending Admin Approval
+                        </button>
                     </div>
                 {% else %}
                     <div class="bg-light p-3 rounded-4 mb-3 border-start border-4 border-secondary opacity-75">

@@ -8,10 +8,21 @@
     .role-icon { font-size: 24px; margin-bottom: 5px; display: block; }
     .btn-primary { background: #6366f1; border: none; padding: 12px; border-radius: 10px; font-weight: 600; }
     .form-control { border-radius: 8px; padding: 12px; }
+
+    /* Real-world validation styles */
+    .is-invalid { border-color: #dc3545 !important; }
+    .invalid-feedback-custom { color: #dc3545; font-size: 0.75rem; font-weight: bold; margin-top: 4px; display: block; }
+    
+    @keyframes shake {
+        0%, 100% { transform: translateX(0); }
+        25% { transform: translateX(-5px); }
+        75% { transform: translateX(5px); }
+    }
+    .shake { animation: shake 0.2s ease-in-out 0s 2; }
 </style>
 
 <div class="container">
-    <div class="card register-card shadow-lg p-4 p-md-5">
+    <div class="card register-card shadow-lg p-4 p-md-5" id="regCard">
         
         {% if messages %}
             {% for message in messages %}
@@ -25,7 +36,7 @@
             <h3 class="fw-bold text-center mb-1">Create Account</h3>
             <p class="text-center text-muted mb-4">Join LocalTaskAI and start your journey</p>
 
-            <form method="POST">
+            <form method="POST" id="registrationForm" novalidate>
                 {% csrf_token %}
                 <div class="row g-3 mb-4">
                     <label class="fw-bold small">REGISTER AS:</label>
@@ -49,24 +60,24 @@
 
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Full Name</label>
-                    <input type="text" name="name" class="form-control" placeholder="Enter your full name" required>
+                    <input type="text" name="name" id="id_name" class="form-control" placeholder="Enter your full name" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Email Address</label>
-                    <input type="email" name="email" class="form-control" placeholder="name@example.com" required>
+                    <input type="email" name="email" id="id_email" class="form-control" placeholder="name@example.com" required>
                 </div>
                 <div class="mb-3">
                     <label class="form-label small fw-bold">Phone Number</label>
-                    <input type="text" name="phone" class="form-control" placeholder="10-digit number" required>
+                    <input type="text" name="phone" id="id_phone" class="form-control" placeholder="10-digit number" maxlength="10" required>
                 </div>
                 <div class="row mb-4">
                     <div class="col-6">
                         <label class="form-label small fw-bold">Password</label>
-                        <input type="password" name="password" class="form-control" required>
+                        <input type="password" name="password" id="id_password" class="form-control" required>
                     </div>
                     <div class="col-6">
                         <label class="form-label small fw-bold">Confirm</label>
-                        <input type="password" name="confirmpassword" class="form-control" required>
+                        <input type="password" name="confirmpassword" id="id_confirm" class="form-control" required>
                     </div>
                 </div>
                 <button type="submit" class="btn btn-primary w-100 mb-3">Get Started</button>
@@ -80,11 +91,11 @@
                 <h4 class="fw-bold">Check your email</h4>
                 <p class="text-muted small">Enter the 6-digit code sent to your inbox.</p>
                 
-                <form method="POST" class="mt-4">
+                <form method="POST" class="mt-4" id="otpForm" novalidate>
                     {% csrf_token %}
                     <input type="hidden" name="otp_verification" value="True">
                     <div class="mb-4">
-                        <input type="text" name="otp" class="form-control text-center fs-2 fw-bold" maxlength="6" placeholder="------" style="letter-spacing: 10px;" required autofocus>
+                        <input type="text" name="otp" id="id_otp" class="form-control text-center fs-2 fw-bold" maxlength="6" placeholder="------" style="letter-spacing: 10px;" required autofocus>
                     </div>
                     <button type="submit" class="btn btn-primary w-100 py-3">Verify & Register</button>
                 </form>
@@ -105,4 +116,73 @@
         </p>
     </div>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('registrationForm');
+    if(!form) return;
+
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Helper to show errors
+        const showError = (input, msg) => {
+            isValid = false;
+            input.classList.add('is-invalid');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback-custom';
+            errorDiv.innerText = msg;
+            input.parentElement.appendChild(errorDiv);
+        };
+
+        // Clear previous errors
+        document.querySelectorAll('.invalid-feedback-custom').forEach(el => el.remove());
+        document.querySelectorAll('.form-control').forEach(el => el.classList.remove('is-invalid'));
+
+        const name = document.getElementById('id_name');
+        const email = document.getElementById('id_email');
+        const phone = document.getElementById('id_phone');
+        const pass = document.getElementById('id_password');
+        const confirm = document.getElementById('id_confirm');
+
+        // 1. Name Validation (Letters only, min 3)
+        if (name.value.trim().length < 3 || !/^[A-Za-z\s]+$/.test(name.value)) {
+            showError(name, "Please enter a valid full name (letters only).");
+        }
+
+        // 2. Email Validation
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
+            showError(email, "Please enter a valid email address.");
+        }
+
+        // 3. Phone Validation (Indian 10-digit format)
+        if (!/^[6-9]\d{9}$/.test(phone.value)) {
+            showError(phone, "Enter a valid 10-digit mobile number starting with 6-9.");
+        }
+
+        // 4. Password Strength (Min 8 chars, 1 letter, 1 number, 1 special)
+        const passRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/;
+        if (!passRegex.test(pass.value)) {
+            showError(pass, "Password must be 8+ characters with a letter, number, and special character.");
+        }
+
+        // 5. Confirm Password
+        if (pass.value !== confirm.value) {
+            showError(confirm, "Passwords do not match.");
+        }
+
+        if (!isValid) {
+            e.preventDefault();
+            const card = document.getElementById('regCard');
+            card.classList.add('shake');
+            setTimeout(() => card.classList.remove('shake'), 400);
+        }
+    });
+
+    // Numerical-only restriction for phone input
+    document.getElementById('id_phone').addEventListener('input', function(e) {
+        this.value = this.value.replace(/[^0-9]/g, '');
+    });
+});
+</script>
 {% endblock %}
